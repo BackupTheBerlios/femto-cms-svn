@@ -1,6 +1,0 @@
-^bin/.*
-^ssl/.*
-^tmp/.*
-^femtocms-[0-9.]*.jar$
-^femtocms-[0-9.]*-bundle.zip$
-.*~$
