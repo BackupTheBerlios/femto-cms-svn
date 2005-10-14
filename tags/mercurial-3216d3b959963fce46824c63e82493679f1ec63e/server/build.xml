@@ -1,0 +1,42 @@
+<project name="femtocms" default="help">
+    <property name="version" value="0.3"/>
+    <path id="jars">
+        <fileset dir="jar" includes="*.jar"/>
+    </path>
+    <target name="help">
+        <echo>clean: clean up tmp directory.</echo>
+        <echo>compile: compile the classes.</echo>
+        <echo>jar: create femtocms-${version}.jar.</echo>
+        <echo>bundle: bundle into zip.</echo>
+    </target>
+    <target name="clean">
+        <delete dir="tmp"/>
+    </target>
+    <target name="compile">
+        <mkdir dir="tmp"/>
+        <javac srcdir="src" destdir="tmp" optimize="true" debug="true"
+            classpathref="jars"/>
+    </target>
+    <target name="jar" depends="compile">
+        <delete file="femtocms-${version}.jar"/>
+        <jar jarfile="femtocms-${version}.jar">
+            <fileset dir="tmp"/>
+            <fileset dir="src" excludes="*.java"/>
+        </jar>
+    </target>
+    <target name="bundle" depends="clean,jar">
+        <delete file="femtocms-${version}-bundle.zip"/>
+        <zip zipfile="femtocms-${version}-bundle.zip">
+            <fileset dir=".">
+                <include name="*.txt"/>
+                <include name="femtocms-*.sh"/>
+                <include name="*.cmd"/>
+                <include name="jar/*"/>
+                <include name="fck/*"/>
+            </fileset>
+            <zipfileset dir="." prefix="jar/">
+                <include name="femtocms-${version}.jar"/>
+            </zipfileset>
+        </zip>
+    </target>
+</project>
