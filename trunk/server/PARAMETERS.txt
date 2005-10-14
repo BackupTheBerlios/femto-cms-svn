@@ -1,0 +1,27 @@
+femtocms-base: view and edit pipeline
+	This is the base URI of the repository for the current engine. It
+	will be unset if the current media type stylesheet is not version
+	controlled. Note that this is usually the case.
+
+femtocms-engine: all pipelines
+	This is a reference to the rendering engine, an instance of class
+	de.mobizcorp.femtocms.engine.BaseEngine.
+
+femtocms-href: all pipelines
+	This is the system URI of the media type stylesheet.
+
+femtocms-request-parameters: all pipelines
+	This is a reference to the request parameters, an instance of class
+	simple.util.net.Parameters.
+
+femtocms-sha1: view and edit pipeline
+	This is SHA1 hash of the media type stylesheet. It will be unset if
+	it is not version controlled. Note that this is usually the case.
+
+femtocms-tip: view and edit pipeline
+	The tip of the current repository.
+
+<file>:<line>:<column>: save pipeline
+	This special parameter is set on the saving pipeline to match the
+	location in the original input file which has to be replaced. The
+	name is identical to the edit location that was sent to the editor.

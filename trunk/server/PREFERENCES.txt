@@ -1,0 +1,42 @@
+This document describes the preferences that control the operation
+of the femtocms server.
+
+expire.factor = 100
+	The expires header of HTTP responses is set based on the rendering
+	time taken for that particular page. This should allow the server
+	to scale gracefully even to expensive pages. The expires.factor is
+	a floating point number that is multiplied with the rendering time
+	to generate the expires header. So, if rendering for a page takes
+	1.2 seconds, the expires header will be set to 2 minutes in the
+	future with the default setting.
+
+fck.archive = fck/FCKeditor_2.0.zip
+	The FCK editor archive location. Resources for the editor will be
+	loaded directly from the distribution ZIP.
+
+hg.command = hg
+	The path to the hg command, this is the mercurial version control
+	implementation.
+
+httpd.port = 80
+	The TCP port number for the HTTP server.
+
+https.cert
+	This is the SSL (HTTPS) PKCS#12 key and certificate file. There is
+	no fallback for this preference; if it is left undefined the SSL
+	server will be left unconfigured.
+
+https.pass = ""
+	This is the SSL (HTTPS) key passphrase. The fallback is the empty
+	string. If the passphrase fails to decrypt the key and certificate
+	file, the user will be prompted for the passphrase interactively.
+	Reading the passphrase from standard input works only if there is
+	a controlling tty. If started without controlling tty, the passphrase
+	must be configured as a preference. This is true also for operating
+	systems that do not provide a tty, or that lack the stty command.
+
+https.port = 443
+	The TCP port number for the HTTPS server.
+
+root.mount = .
+	The repository path for the root mount.
