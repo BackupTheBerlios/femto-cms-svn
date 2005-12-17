@@ -49,11 +49,11 @@ public class Parser {
 
         public final PushbackInputStream in;
 
-        public final NamePool.OpenPool<Text> lNamePool;
+        public final OpenPool<Text> lNamePool;
 
         public final Parser parser;
 
-        public final NamePool.OpenPool<NamePair> qNamePool;
+        public final OpenPool<NamePair> qNamePool;
 
         protected boolean standalone;
 
@@ -62,8 +62,8 @@ public class Parser {
         public State(InputStream in, Parser parser) {
             this.in = new PushbackInputStream(in, 8);
             this.parser = parser;
-            this.lNamePool = new NamePool.OpenPool<Text>();
-            this.qNamePool = new NamePool.OpenPool<NamePair>();
+            this.lNamePool = new OpenPool<Text>();
+            this.qNamePool = new OpenPool<NamePair>();
             this.emptyName = lNamePool.intern(Text.EMPTY);
         }
 
@@ -130,7 +130,8 @@ public class Parser {
                 return true;
             }
             unread();
-            throw new SyntaxError("'" + (q == '\'' ? "\'" : (char) q)
+            throw new SyntaxError("'"
+                    + (q == '\'' ? "\'" : String.valueOf((char) q))
                     + "' expected after '" + buffer + "'");
         }
 

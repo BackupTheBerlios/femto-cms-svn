@@ -32,120 +32,14 @@ import java.util.HashMap;
  */
 public abstract class NamePool<T> {
 
-    /**
-     * A mutable name pool that falls back to a fixed parent pool for undefined
-     * identifiers.
-     * 
-     * @author Copyright(C) 2005 Klaus Rennecke, all rights reserved.
-     * 
-     * @param <T>
-     *            the key type, for instance Text or String.
-     */
-    public static class ChildPool<T> extends OpenPool<T> {
-
-        private final FixedPool<T> parent;
-
-        private final int split;
-
-        public ChildPool(FixedPool<T> parent) {
-            this.parent = parent;
-            this.split = parent.reg.size();
-        }
-
-        @Override
-        public FixedPool<T> close() {
-            FixedPool<T> result = super.close();
-            result.map.putAll(parent.map);
-            result.reg.addAll(0, parent.reg);
-            return result;
-        }
-
-        @Override
-        public boolean contains(T t) {
-            return super.contains(t) || parent.contains(t);
-        }
-
-        @Override
-        public T extern(int id) {
-            if (id < split) {
-                return parent.extern(id);
-            } else {
-                return super.extern(id - split);
-            }
-        }
-
-        @Override
-        protected int register(T t) {
-            Entry<T> entry = parent.map.get(t);
-            if (null != entry) {
-                return entry.id;
-            }
-            entry = new NamePool.Entry<T>(reg.size() + split, t);
-            map.put(t, entry);
-            reg.add(entry);
-            return entry.id;
-        }
-
-    }
-
-    public static class Entry<T> {
+    public static class Entry<V> {
         public final int id;
 
-        public final T value;
+        public final V value;
 
-        public Entry(int id, T value) {
+        public Entry(int id, V value) {
             this.id = id;
             this.value = value;
-        }
-    }
-
-    /**
-     * A fixed name pool intended to be used as a constant.
-     * 
-     * @author Copyright(C) 2005 Klaus Rennecke, all rights reserved.
-     * 
-     * @param <T>
-     *            the key type, for instance Text or String.
-     */
-    public static class FixedPool<T> extends NamePool<T> {
-
-        public FixedPool(HashMap<T, Entry<T>> map, ArrayList<Entry<T>> reg) {
-            super(map, reg);
-        }
-
-        public ChildPool<T> open() {
-            return new ChildPool<T>(this);
-        }
-
-        @Override
-        protected int register(T t) {
-            throw new UnsupportedOperationException("this pool is fixed");
-        }
-
-    }
-
-    /**
-     * A mutable name pool that can be used collect identifiers. Closing the
-     * open pool creates a fixed copy of the current pool.
-     * 
-     * @author Copyright(C) 2005 Klaus Rennecke, all rights reserved.
-     * 
-     * @param <T>
-     *            the key type, for instance Text or String.
-     */
-    public static class OpenPool<T> extends NamePool<T> {
-
-        public FixedPool<T> close() {
-            return new FixedPool<T>(new HashMap<T, Entry<T>>(map),
-                    new ArrayList<Entry<T>>(reg));
-        }
-
-        @Override
-        protected int register(T t) {
-            Entry<T> entry = new NamePool.Entry<T>(reg.size(), t);
-            map.put(t, entry);
-            reg.add(entry);
-            return entry.id;
         }
     }
 
