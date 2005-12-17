@@ -127,12 +127,9 @@ public final class Text implements TextSequence {
             throw new IllegalArgumentException("invalid radix: " + radix);
         }
         int c;
-        final boolean sign;
         if (n < 0) {
-            sign = true;
             c = 2;
         } else {
-            sign = false;
             n = -n;
             c = 1;
         }
@@ -150,7 +147,7 @@ public final class Text implements TextSequence {
             n /= radix;
         }
         buffer[--pos] = (byte) ((n > -10 ? 48 : 55) - n);
-        if (sign) {
+        if (pos > 0) {
             buffer[--pos] = 45;
         }
         return new Text(buffer, 0, buffer.length);
