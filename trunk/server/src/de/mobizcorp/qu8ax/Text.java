@@ -121,11 +121,45 @@ public final class Text implements TextSequence {
         System.arraycopy(data, off, copy, 0, len);
         return new Text(copy, 0, len);
     }
+    
+    public static Text valueOf(int n, final int radix) {
+        if (2 > radix || radix > 36) {
+            throw new IllegalArgumentException("invalid radix: " + radix);
+        }
+        int c;
+        final boolean sign;
+        if (n < 0) {
+            sign = true;
+            c = 2;
+        } else {
+            sign = false;
+            n = -n;
+            c = 1;
+        }
+        int r = -radix;
+        // If we overflow r, we exceed Integer.MAX_VALUE
+        while (r < 0 && r >= n) {
+            r *= radix;
+            c += 1;
+        }
+        final byte buffer[] = new byte[c];
+        int pos = buffer.length;
+        while (n <= -radix) {
+            int m = n % radix;
+            buffer[--pos] = (byte) ((m > -10 ? 48 : 55) - m);
+            n /= radix;
+        }
+        buffer[--pos] = (byte) ((n > -10 ? 48 : 55) - n);
+        if (sign) {
+            buffer[--pos] = 45;
+        }
+        return new Text(buffer, 0, buffer.length);
+    }
 
     public static Text valueOf(String str) {
         return new Text(str);
     }
-
+    
     private final byte[] data;
 
     private final int off, len;
