@@ -18,8 +18,10 @@
  */
 package de.mobizcorp.hui;
 
+import java.io.FileInputStream;
 import java.io.FilterOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
@@ -52,14 +54,39 @@ public class StateCodec extends FilterOutputStream {
         byte[] result = new byte[(data.length * 6) / 8];
         int bits = 0, reg = 0, j = 0;
         for (int i = 0; i < data.length; i++) {
-            reg = reg << 6 | fromBase64(data[i]);
-            bits += 6;
-            while (bits >= 8) {
-                bits -= 8;
-                result[j++] = (byte) (reg >>> bits);
+            final byte b = data[i];
+            if (48 <= b && b <= 122) {
+                reg = reg << 6 | fromBase64(b);
+                bits += 6;
+                while (bits >= 8) {
+                    bits -= 8;
+                    result[j++] = (byte) (reg >>> bits);
+                }
             }
         }
         return result;
+    }
+    
+    public static void main(String args[]) {
+        try {
+            final InputStream in;
+            if (args.length > 0) {
+                in = new FileInputStream(args[0]);
+            } else {
+                in = System.in;
+            }
+            int n;
+            final byte[] buffer = new byte[8192];
+            final StateCodec codec = new StateCodec(System.out);
+            while ((n = in.read(buffer)) != -1) {
+                if (n > 0) {
+                    codec.write(buffer, 0, n);
+                }
+            }
+            codec.flush();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public static final byte toBase64(int n) {

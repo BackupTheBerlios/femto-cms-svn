@@ -518,9 +518,14 @@ public class Parser {
                 throw new SyntaxError("attribute value expected after '"
                         + s.buffer + "'");
             }
-            if (name.startsWith(XMLNS)) {
-                Text prefix = name.part(XMLNS.size(), name.size()
-                        - XMLNS.size());
+            if (name.equals(XMLNS)) {
+                Text prefix = Text.EMPTY;
+                c.push(new NamePair(s.lNamePool.intern(prefix), s.lNamePool
+                        .intern(value)));
+                return attrRing;
+            } else if (name.startsWith(XMLNS_)) {
+                Text prefix = name.part(XMLNS_.size(), name.size()
+                        - XMLNS_.size());
                 c.push(new NamePair(s.lNamePool.intern(prefix), s.lNamePool
                         .intern(value)));
                 return attrRing;
@@ -1017,6 +1022,9 @@ public class Parser {
             (byte) '?');
 
     public static final Text XMLNS = Text.constant((byte) 'x', (byte) 'm',
+            (byte) 'l', (byte) 'n', (byte) 's');
+
+    public static final Text XMLNS_ = Text.constant((byte) 'x', (byte) 'm',
             (byte) 'l', (byte) 'n', (byte) 's', (byte) ':');
 
     public static final Text YES = Text.constant((byte) 'y', (byte) 'e',
@@ -1192,6 +1200,11 @@ public class Parser {
             name = name.part(colon + 1, name.size() - colon - 1);
         }
         return s.qNamePool.intern(new NamePair(uri, s.lNamePool.intern(name)));
+    }
+
+    public static final int nameFor(final int uri, Text name,
+            final NamePool<NamePair> qNames, final NamePool<Text> lNames) {
+        return qNames.intern(new NamePair(uri, lNames.intern(name)));
     }
 
 }

@@ -20,6 +20,7 @@ package de.mobizcorp.hui;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Iterator;
 import java.util.Stack;
 
 import de.mobizcorp.qu8ax.NamePair;
@@ -29,6 +30,7 @@ import de.mobizcorp.qu8ax.Resolver;
 import de.mobizcorp.qu8ax.Sink;
 import de.mobizcorp.qu8ax.Text;
 import de.mobizcorp.qu8ax.TextBuffer;
+import de.mobizcorp.qu8ax.TextLoader;
 
 /**
  * Tree builder for HUI.
@@ -148,57 +150,27 @@ public class HuiBuilder extends Sink {
     }
 
     @Override
-    public void handleOpenDocument(final NamePool<Text> lNames,
-            final NamePool<NamePair> qNames) {
-        final int mt = lNames.intern(Text.EMPTY);
-        this.ATT_ACTION = qNames.intern(new NamePair(mt, lNames.intern(Text
-                .constant((byte) 'a', (byte) 'c', (byte) 't', (byte) 'i',
-                        (byte) 'o', (byte) 'n'))));
-        this.ATT_COLS = qNames.intern(new NamePair(mt, lNames.intern(Text
-                .constant((byte) 'c', (byte) 'o', (byte) 'l', (byte) 's'))));
-        this.ATT_COLSPAN = qNames.intern(new NamePair(mt, lNames.intern(Text
-                .constant((byte) 'c', (byte) 'o', (byte) 'l', (byte) 's',
-                        (byte) 'p', (byte) 'a', (byte) 'n'))));
-        this.ATT_COLUMNS = qNames.intern(new NamePair(mt, lNames.intern(Text
-                .constant((byte) 'c', (byte) 'o', (byte) 'l', (byte) 'u',
-                        (byte) 'm', (byte) 'n', (byte) 's'))));
-        this.ATT_ID = qNames.intern(new NamePair(mt, lNames.intern(Text
-                .constant((byte) 'i', (byte) 'd'))));
-        this.ATT_NAME = qNames.intern(new NamePair(mt, lNames.intern(Text
-                .constant((byte) 'n', (byte) 'a', (byte) 'm', (byte) 'e'))));
-        this.ATT_ROWS = qNames.intern(new NamePair(mt, lNames.intern(Text
-                .constant((byte) 'r', (byte) 'o', (byte) 'w', (byte) 's'))));
-        this.ATT_ROWSPAN = qNames.intern(new NamePair(mt, lNames.intern(Text
-                .constant((byte) 'r', (byte) 'o', (byte) 'w', (byte) 's',
-                        (byte) 'p', (byte) 'a', (byte) 'n'))));
-        this.ATT_SECRET = qNames.intern(new NamePair(mt, lNames.intern(Text
-                .constant((byte) 's', (byte) 'e', (byte) 'c', (byte) 'r',
-                        (byte) 'e', (byte) 't'))));
-        this.ATT_TEXT = qNames.intern(new NamePair(mt, lNames.intern(Text
-                .constant((byte) 't', (byte) 'e', (byte) 'x', (byte) 't'))));
-        this.TAG_BUTTON = qNames.intern(new NamePair(mt, lNames.intern(Text
-                .constant((byte) 'b', (byte) 'u', (byte) 't', (byte) 't',
-                        (byte) 'o', (byte) 'n'))));
-        this.TAG_LABEL = qNames.intern(new NamePair(mt, lNames.intern(Text
-                .constant((byte) 'l', (byte) 'a', (byte) 'b', (byte) 'e',
-                        (byte) 'l'))));
-        this.TAG_PANEL = qNames.intern(new NamePair(mt, lNames.intern(Text
-                .constant((byte) 'p', (byte) 'a', (byte) 'n', (byte) 'e',
-                        (byte) 'l'))));
-        this.TAG_PASSWORDFIELD = qNames.intern(new NamePair(mt, lNames
-                .intern(Text.constant((byte) 'p', (byte) 'a', (byte) 's',
-                        (byte) 's', (byte) 'w', (byte) 'o', (byte) 'r',
-                        (byte) 'd', (byte) 'f', (byte) 'i', (byte) 'e',
-                        (byte) 'l', (byte) 'd'))));
-        this.TAG_TEXT = qNames.intern(new NamePair(mt, lNames.intern(Text
-                .constant((byte) 't', (byte) 'e', (byte) 'x', (byte) 't'))));
-        this.TAG_TEXTFIELD = qNames.intern(new NamePair(mt, lNames.intern(Text
-                .constant((byte) 't', (byte) 'e', (byte) 'x', (byte) 't',
-                        (byte) 'f', (byte) 'i', (byte) 'e', (byte) 'l',
-                        (byte) 'd'))));
-        this.TAG_TEXTAREA = qNames.intern(new NamePair(mt, lNames.intern(Text
-                .constant((byte) 't', (byte) 'e', (byte) 'x', (byte) 't',
-                        (byte) 'a', (byte) 'r', (byte) 'e', (byte) 'a'))));
+    public void handleOpenDocument(final NamePool<Text> l,
+            final NamePool<NamePair> q) {
+        final int mt = l.intern(Text.EMPTY);
+        Iterator<Text> list = TextLoader.fromXML(HuiBuilder.class);
+        this.ATT_ACTION = Parser.nameFor(mt, list.next(), q, l);
+        this.ATT_COLS = Parser.nameFor(mt, list.next(), q, l);
+        this.ATT_COLSPAN = Parser.nameFor(mt, list.next(), q, l);
+        this.ATT_COLUMNS = Parser.nameFor(mt, list.next(), q, l);
+        this.ATT_ID = Parser.nameFor(mt, list.next(), q, l);
+        this.ATT_NAME = Parser.nameFor(mt, list.next(), q, l);
+        this.ATT_ROWS = Parser.nameFor(mt, list.next(), q, l);
+        this.ATT_ROWSPAN = Parser.nameFor(mt, list.next(), q, l);
+        this.ATT_SECRET = Parser.nameFor(mt, list.next(), q, l);
+        this.ATT_TEXT = Parser.nameFor(mt, list.next(), q, l);
+        this.TAG_BUTTON = Parser.nameFor(mt, list.next(), q, l);
+        this.TAG_LABEL = Parser.nameFor(mt, list.next(), q, l);
+        this.TAG_PANEL = Parser.nameFor(mt, list.next(), q, l);
+        this.TAG_PASSWORDFIELD = Parser.nameFor(mt, list.next(), q, l);
+        this.TAG_TEXT = Parser.nameFor(mt, list.next(), q, l);
+        this.TAG_TEXTFIELD = Parser.nameFor(mt, list.next(), q, l);
+        this.TAG_TEXTAREA = Parser.nameFor(mt, list.next(), q, l);
     }
 
     @Override
