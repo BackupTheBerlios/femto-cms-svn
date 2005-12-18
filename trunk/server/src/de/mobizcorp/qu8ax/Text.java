@@ -307,7 +307,7 @@ public final class Text implements TextSequence {
                 throw new NumberFormatException("invalid character: " + (char)b);
             }
             if (v < radix) {
-                n = n * radix + v;
+                n = n * radix - v;
             } else {
                 throw new NumberFormatException("invalid digit: " + v + " for radix " + radix);
             }
