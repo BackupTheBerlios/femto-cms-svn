@@ -283,6 +283,37 @@ public final class Text implements TextSequence {
     public boolean startsWith(final Text t) {
         return indexOf(t, 0, 1) == 0;
     }
+    
+    public int toInt(int radix) {
+        int i = off, n = 0;
+        final int end = off + len;
+        final int sign;
+        if (i < end && data[i] == 48) {
+            sign = 1;
+            i += 1;
+        } else {
+            sign = -1;
+        }
+        for (; i < end; i++) {
+            final byte b = data[i];
+            final int v;
+            if (48 <= b && b <= 57) {
+                v = b - 48;
+            } else if (65 <= b && b <= 90) {
+                v = b - 55;
+            } else if (97 <= b && b <= 122) {
+                v = b - 87;
+            } else {
+                throw new NumberFormatException("invalid character: " + (char)b);
+            }
+            if (b < radix) {
+                n = n * radix + v;
+            } else {
+                throw new NumberFormatException("invalid digit: " + v + " for radix " + radix);
+            }
+        }
+        return n * sign;
+    }
 
     @Override
     public String toString() {
