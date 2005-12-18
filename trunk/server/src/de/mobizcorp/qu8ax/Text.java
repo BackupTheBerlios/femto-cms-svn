@@ -32,6 +32,10 @@ public final class Text implements TextSequence {
 
     public static final Text EMPTY = constant();
 
+    public static final int MAX_RADIX = 36;
+
+    public static final int MIN_RADIX = 2;
+
     public static Text constant(byte... data) {
         return new Text(data, 0, data.length);
     }
@@ -106,7 +110,7 @@ public final class Text implements TextSequence {
         } else
             try {
                 for (int i = 0; i < len; i++) {
-                    if (a[a0 + i] != b[a0 + i]) {
+                    if (a[a0 + i] != b[b0 + i]) {
                         return false;
                     }
                 }
@@ -121,9 +125,9 @@ public final class Text implements TextSequence {
         System.arraycopy(data, off, copy, 0, len);
         return new Text(copy, 0, len);
     }
-    
+
     public static Text valueOf(int n, final int radix) {
-        if (2 > radix || radix > 36) {
+        if (MIN_RADIX > radix || radix > MAX_RADIX) {
             throw new IllegalArgumentException("invalid radix: " + radix);
         }
         int c;
@@ -156,7 +160,7 @@ public final class Text implements TextSequence {
     public static Text valueOf(String str) {
         return new Text(str);
     }
-    
+
     private final byte[] data;
 
     private final int off, len;
@@ -216,6 +220,24 @@ public final class Text implements TextSequence {
         return FNV1aHash.hash(data, off, len);
     }
 
+    public int indexOf(final int b) {
+        return indexOf(b, 0, len);
+    }
+
+    public int indexOf(final int b, final int off) {
+        return indexOf(b, off, len);
+    }
+
+    public int indexOf(final int b, final int off, final int len) {
+        final int end = off + (off + len > this.len ? this.len : len);
+        for (int i = off; i < end; i++) {
+            if (data[this.off + i] == b) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     public int indexOf(final Text t) {
         return indexOf(t, 0, len);
     }
@@ -225,11 +247,12 @@ public final class Text implements TextSequence {
     }
 
     public int indexOf(final Text t, final int off, final int len) {
-        final int end = (off + len > this.len ? this.len : len) - t.len;
+        final int end = off + (off + len > this.len ? this.len : len) - t.len
+                + 1;
         scan: for (int i = off; i < end; i++) {
-            int j = i + t.len;
-            while (--j >= i) {
-                if (data[this.off + j] != t.data[t.off + j]) {
+            int j = t.len;
+            while (--j >= 0) {
+                if (data[this.off + i + j] != t.data[t.off + j]) {
                     continue scan;
                 }
             }
@@ -240,6 +263,24 @@ public final class Text implements TextSequence {
 
     public TextIterator iterator() {
         return new TextIterator(data, off, len);
+    }
+
+    public int lastIndexOf(final int b) {
+        return lastIndexOf(b, 0, len);
+    }
+
+    public int lastIndexOf(final int b, final int off) {
+        return lastIndexOf(b, off, len);
+    }
+
+    public int lastIndexOf(final int b, final int off, final int len) {
+        int i = off + len > this.len ? this.len : off + len;
+        while (--i >= off) {
+            if (data[this.off + i] == b) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     public int lastIndexOf(final Text t) {
@@ -272,6 +313,8 @@ public final class Text implements TextSequence {
     public Text part(int off, int len) {
         if (off + len > this.len) {
             throw new IndexOutOfBoundsException(this.len + " < " + (off + len));
+        } else if (len < 0) {
+            throw new NegativeArraySizeException(len + " < 0");
         }
         return new Text(data, this.off + off, len);
     }
@@ -281,9 +324,27 @@ public final class Text implements TextSequence {
     }
 
     public boolean startsWith(final Text t) {
-        return indexOf(t, 0, 1) == 0;
+        if (len < t.len) {
+            return false;
+        }
+        byte[] da = data;
+        int ia = off + t.len;
+        byte[] db = t.data;
+        int ib = t.off + t.len;
+        while (--ia >= off) {
+            if (da[ia] != db[--ib]) {
+                return false;
+            }
+        }
+        return true;
     }
-    
+
+    public byte[] toBytes() {
+        byte[] result = new byte[len];
+        writeTo(result, 0, len);
+        return result;
+    }
+
     public int toInt(int radix) {
         int i = off, n = 0;
         final int end = off + len;
@@ -304,12 +365,14 @@ public final class Text implements TextSequence {
             } else if (97 <= b && b <= 122) {
                 v = b - 87;
             } else {
-                throw new NumberFormatException("invalid character: " + (char)b);
+                throw new NumberFormatException("invalid character: "
+                        + (char) b);
             }
             if (v < radix) {
                 n = n * radix - v;
             } else {
-                throw new NumberFormatException("invalid digit: " + v + " for radix " + radix);
+                throw new NumberFormatException("invalid digit: " + v
+                        + " for radix " + radix);
             }
         }
         return n * sign;

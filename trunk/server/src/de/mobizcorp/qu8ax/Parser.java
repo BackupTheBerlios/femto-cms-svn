@@ -43,7 +43,7 @@ public class Parser {
     }
 
     private static final class State {
-        public TextBuffer buffer;
+        public final TextBuffer buffer = new TextBuffer();
 
         public final int emptyName;
 
@@ -509,6 +509,10 @@ public class Parser {
                 return attrRing;
             }
             Text name = s.buffer.part(start, s.buffer.size() - start);
+            if (s.read() != '=') {
+                throw new SyntaxError("equal sign expected after '" + s.buffer
+                        + "'");
+            }
             Text value = nt_AttValue(s);
             if (value == null) {
                 throw new SyntaxError("attribute value expected after '"
@@ -703,7 +707,7 @@ public class Parser {
                 while (nt_S(s)) {
                     attrRing = nt_Attribute(s, c, attrRing);
                 }
-                boolean isOpen = s.literal('/');
+                boolean isEmpty = s.literal('/');
                 if (!s.literal('>')) {
                     throw new SyntaxError("'>' expected after '" + s.buffer
                             + "'");
@@ -718,7 +722,7 @@ public class Parser {
                                 scan.lName, c, true), scan.value);
                     } while (scan != attrRing);
                 }
-                if (isOpen) {
+                if (!isEmpty) {
                     parser.handler.handleOpenElement(qName);
                     nt_Content(s, c, parser);
                     s.buffer.clear();
@@ -1076,7 +1080,7 @@ public class Parser {
     protected Syntax10 nt_Declaration(final State s) throws IOException {
         // XMLDecl ::= '<?xml' VersionInfo EncodingDecl? SDDecl? S?'?>'
         if (!s.literal(XML_DECL_START)) {
-            return null;
+            return new Syntax10();
         }
         // VersionInfo ::= S 'version' Eq ("'" VersionNum "'" | '"' VersionNum
         // '"')

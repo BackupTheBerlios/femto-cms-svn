@@ -19,6 +19,7 @@
 package de.mobizcorp.hui;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 
 import de.mobizcorp.qu8ax.Text;
@@ -46,18 +47,21 @@ public class HuiPanel extends HuiNode {
             (byte) '>');
 
     private static final Text HTML_ROW_CLOSE = Text.constant((byte) '<',
-            (byte) '/', (byte) 't', (byte) 'r', (byte) '>');
+            (byte) '/', (byte) 't', (byte) 'r', (byte) '>', (byte) '\n');
 
     private static final Text HTML_ROW_OPEN = Text.constant((byte) '<',
             (byte) 't', (byte) 'r', (byte) '>');
 
-    private static final Text HTML_TABLE_CLOSE = Text.constant((byte) '<',
+    private static final Text HTML_TAB_CLOSE = Text.constant((byte) '<',
             (byte) '/', (byte) 't', (byte) 'a', (byte) 'b', (byte) 'l',
-            (byte) 'e', (byte) '>');
+            (byte) 'e', (byte) '>', (byte) '\n');
 
-    private static final Text HTML_TABLE_OPEN = Text.constant((byte) '<',
+    private static final Text HTML_TAB_OPEN1 = Text.constant((byte) '<',
             (byte) 't', (byte) 'a', (byte) 'b', (byte) 'l', (byte) 'e',
-            (byte) '>');
+            (byte) ' ', (byte) 'i', (byte) 'd', (byte) '=', (byte) '"');
+
+    private static final Text HTML_TAB_OPEN2 = Text.constant((byte) '"',
+            (byte) '>', (byte) '\n');
 
     private int cols;
 
@@ -75,8 +79,19 @@ public class HuiPanel extends HuiNode {
     }
 
     @Override
+    public void loadState(InputStream in) throws IOException {
+        HuiNode scan = getChild();
+        while (scan != null) {
+            scan.loadState(in);
+            scan = scan.getSibling();
+        }
+    }
+
+    @Override
     public void renderNode(OutputStream out) throws IOException {
-        HTML_TABLE_OPEN.writeTo(out);
+        HTML_TAB_OPEN1.writeTo(out);
+        getId().writeTo(out);
+        HTML_TAB_OPEN2.writeTo(out);
         HuiNode scan = getChild();
         int c = getCols();
         while (scan != null) {
@@ -96,7 +111,7 @@ public class HuiPanel extends HuiNode {
             }
             scan = scan.getSibling();
         }
-        HTML_TABLE_CLOSE.writeTo(out);
+        HTML_TAB_CLOSE.writeTo(out);
     }
 
     public void setCols(int cols) {

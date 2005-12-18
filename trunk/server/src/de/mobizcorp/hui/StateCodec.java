@@ -47,42 +47,19 @@ public class StateCodec extends FilterOutputStream {
         return (b - (b < 48 ? -17 : (b < 65 ? -4 : (b < 95 ? 65 : (b < 97 ? 32
                 : 71)))));
     }
-
-    /**
-     * Naïve testing routine.
-     * @param args
-     */
-    public static void main(String args[]) {
-        String line;
-        java.io.BufferedReader br = new java.io.BufferedReader(
-                new java.io.InputStreamReader(System.in));
-        try {
-            for (int i = 0; i < 64; i++) {
-                if (fromBase64(toBase64(i)) != i) {
-                    throw new IllegalStateException(i + "<>" + toBase64(i));
-                }
+    
+    public static final byte[] fromBase64(final byte[] data) {
+        byte[] result = new byte[(data.length * 6) / 8];
+        int bits = 0, reg = 0, j = 0;
+        for (int i = 0; i < data.length; i++) {
+            reg = reg << 6 | fromBase64(data[i]);
+            bits += 6;
+            while (bits >= 8) {
+                bits -= 8;
+                result[j++] = (byte) (reg >>> bits);
             }
-            while ((line = br.readLine()) != null) {
-                final byte[] data = line.getBytes("UTF8");
-                System.out.print(base64Size(data.length) + ":");
-                writeBase64(System.out, data, 0, data.length);
-                System.out.println();
-                System.out.print("as stream: '");
-                StateCodec codec1 = new StateCodec(System.out);
-                codec1.write(data);
-                codec1.flush();
-                System.out.println("'");
-                System.out.print("as bytes: '");
-                StateCodec codec2 = new StateCodec(System.out);
-                for (int i = 0; i < data.length; i++) {
-                    codec2.write(data[i]);
-                }
-                codec2.flush();
-                System.out.println("'");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
+        return result;
     }
 
     public static final byte toBase64(int n) {
