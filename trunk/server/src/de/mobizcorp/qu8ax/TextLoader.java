@@ -168,8 +168,8 @@ public class TextLoader extends Sink {
     @Override
     public void handleOpenDocument(NamePool<Text> l, NamePool<NamePair> q) {
         final int uri = l.intern(Text.valueOf(TextLoader.class.getName()));
-        Iterator<Text> list = TextLoader.fromBencoded(TextLoader.class);
-        this.TAG_TEXT = Parser.nameFor(uri, list.next(), q, l);
+        this.TAG_TEXT = Parser.nameFor(uri, Text.constant((byte) 't',
+                (byte) 'e', (byte) 'x', (byte) 't'), q, l);
     }
 
     @Override
