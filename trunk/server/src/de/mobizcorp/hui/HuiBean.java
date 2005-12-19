@@ -21,10 +21,10 @@ package de.mobizcorp.hui;
 import de.mobizcorp.qu8ax.Text;
 
 /**
- * Action handler interface for HUI.
+ * Optional bean interface for custom nodes.
  * 
  * @author Copyright(C) 2005 Klaus Rennecke, all rights reserved.
  */
-public interface ActionHandler {
-    public void action(Text name, Path<HuiNode> context);
+public interface HuiBean {
+    public void setAttribute(Text name, Text value);
 }

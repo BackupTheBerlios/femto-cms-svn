@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<panel text="Folder View" name="top" columns="1">
+	<panel columns="3" top="4" left="4" bottom="4" right="4" gap="4">
+<!-- not implemented
+	    <label text="History:"/>
+	    <panel colspan="2" columns="2">
+			<select id="history"><option>[history]</option></select>
+			<button action="go">Go</button>
+		</panel>
+not implemented -->
+		<select id="location"></select>
+		<button action="cd">Go</button>
+		<label id="filename" text=""/>
+		<bean class="de.mobizcorp.femtocms.model.HuiFolder" id="dir"/>
+		<textarea colspan="2" id="contents" editable="false" rows="32" cols="80"></textarea>
+	</panel>
+</panel>

@@ -44,11 +44,6 @@ public class HuiLabel extends HuiNode {
 
     private Text text;
 
-    @Override
-    public void appendState(OutputStream out) throws IOException {
-        // label has no state
-    }
-
     public Text getText() {
         return text;
     }
@@ -65,6 +60,11 @@ public class HuiLabel extends HuiNode {
         HTML_SPAN_OPEN2.writeTo(out);
         renderText(out, getText());
         HTML_SPAN_CLOSE.writeTo(out);
+    }
+
+    @Override
+    public void saveState(OutputStream out) throws IOException {
+        // label has no state
     }
 
     public void setText(Text text) {

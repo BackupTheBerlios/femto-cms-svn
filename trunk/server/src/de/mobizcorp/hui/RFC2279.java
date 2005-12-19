@@ -1,3 +1,21 @@
+/*
+ * Half User Interface.
+ * Copyright(C) 2005 Klaus Rennecke, all rights reserved.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
 package de.mobizcorp.hui;
 
 import java.io.IOException;
@@ -56,28 +74,29 @@ public class RFC2279 {
         }
     }
 
-    public static int read(InputStream in) throws IOException {
-        int b = in.read() & 0xff;
+    public static int read(final InputStream in) throws IOException {
+        int b = in.read() & 0xff, n;
         if (b <= 0x7f) {
             return b;
         } else if (b <= 0xdf) {
-            return readParts(b & 0x1f, 1, in);
+            b &= 0x1f;
+            n = 1;
         } else if (b <= 0xef) {
-            return readParts(b & 0x0f, 2, in);
+            b &= 0x0f;
+            n = 2;
         } else if (b <= 0xf7) {
-            return readParts(b & 0x07, 3, in);
+            b &= 0x07;
+            n = 3;
         } else if (b <= 0xfb) {
-            return readParts(b & 0x03, 4, in);
+            b &= 0x03;
+            n = 4;
         } else if (b <= 0xfd) {
-            return readParts(b & 0x01, 5, in);
+            b &= 0x01;
+            n = 5;
         } else {
             throw new IOException("invalid UTF-8 start byte: "
                     + Integer.toHexString(b));
         }
-    }
-
-    public static int readParts(int b, int n, InputStream in)
-            throws IOException {
         while (--n >= 0) {
             int c = in.read() & 0xff;
             if ((c & 0xc0) != 0x80) {

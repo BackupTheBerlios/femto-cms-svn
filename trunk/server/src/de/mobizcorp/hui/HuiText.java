@@ -21,9 +21,10 @@ package de.mobizcorp.hui;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Iterator;
 
 import de.mobizcorp.qu8ax.Text;
-import de.mobizcorp.qu8ax.TextBuffer;
+import de.mobizcorp.qu8ax.TextLoader;
 
 /**
  * Text input HUI element.
@@ -32,49 +33,40 @@ import de.mobizcorp.qu8ax.TextBuffer;
  */
 public class HuiText extends HuiNode {
 
-    private static final Text HTML_INPUT1 = Text.constant((byte) '<',
-            (byte) 'i', (byte) 'n', (byte) 'p', (byte) 'u', (byte) 't',
-            (byte) ' ', (byte) 'i', (byte) 'd', (byte) '=', (byte) '"');
+    private static final Text HTML_AREA1, HTML_AREA2, HTML_AREA3, HTML_AREA4,
+            HTML_AREA5, HTML_AREA6;
 
-    private static final Text HTML_INPUT2 = Text.constant((byte) '"',
-            (byte) ' ', (byte) 'n', (byte) 'a', (byte) 'm', (byte) 'e',
-            (byte) '=', (byte) '"');
+    private static final Text HTML_INPUT1, HTML_INPUT2, HTML_INPUT31,
+            HTML_INPUT32, HTML_INPUT4, HTML_INPUT5;
 
-    private static final Text HTML_INPUT31 = Text.constant((byte) '"',
-            (byte) ' ', (byte) 't', (byte) 'y', (byte) 'p', (byte) 'e',
-            (byte) '=', (byte) '"', (byte) 't', (byte) 'e', (byte) 'x',
-            (byte) 't', (byte) '"', (byte) ' ', (byte) 'v', (byte) 'a',
-            (byte) 'l', (byte) 'u', (byte) 'e', (byte) '=', (byte) '"');
+    private static final Text HTML_READONLY;
 
-    private static final Text HTML_INPUT32 = Text.constant((byte) '"',
-            (byte) ' ', (byte) 't', (byte) 'y', (byte) 'p', (byte) 'e',
-            (byte) '=', (byte) '"', (byte) 'p', (byte) 'a', (byte) 's',
-            (byte) 's', (byte) 'w', (byte) 'o', (byte) 'r', (byte) 'd',
-            (byte) '"', (byte) ' ', (byte) 'v', (byte) 'a', (byte) 'l',
-            (byte) 'u', (byte) 'e', (byte) '=', (byte) '"');
-
-    private static final Text HTML_INPUT4 = Text.constant((byte) '"',
-            (byte) ' ', (byte) 's', (byte) 'i', (byte) 'z', (byte) 'e',
-            (byte) '=', (byte) '"');
-
-    private static final Text HTML_INPUT5 = Text.constant((byte) '"',
-            (byte) '>', (byte) '\n');
+    static {
+        Iterator<Text> list = TextLoader.fromXML(HuiText.class);
+        HTML_INPUT1 = list.next();
+        HTML_INPUT2 = list.next();
+        HTML_INPUT31 = list.next();
+        HTML_INPUT32 = list.next();
+        HTML_INPUT4 = list.next();
+        HTML_INPUT5 = list.next();
+        HTML_AREA1 = list.next();
+        HTML_AREA2 = list.next();
+        HTML_AREA3 = list.next();
+        HTML_AREA4 = list.next();
+        HTML_AREA5 = list.next();
+        HTML_AREA6 = list.next();
+        HTML_READONLY = list.next();
+    }
 
     private int cols;
+
+    private boolean editable = true;
 
     private int rows = 1;
 
     private boolean secret = false;
 
     private Text value;
-
-    @Override
-    public void appendState(OutputStream out) throws IOException {
-        if (value != null) {
-            value.writeTo(out);
-        }
-        out.write(0);
-    }
 
     public int getCols() {
         return cols;
@@ -88,41 +80,68 @@ public class HuiText extends HuiNode {
         return value;
     }
 
+    public boolean isEditable() {
+        return editable;
+    }
+
     public boolean isSecret() {
         return secret;
     }
 
     @Override
-    public void loadState(InputStream in) throws IOException {
-        TextBuffer buffer = new TextBuffer();
-        int c;
-        while ((c = in.read()) != -1) {
-            if (c == 0) {
-                break;
-            } else {
-                buffer.append((byte) c);
-            }
+    public void post(Text value, ActionHandler handler, Path<HuiNode> path) {
+        if (isEditable()) {
+            setValue(value);
         }
-        setValue(buffer.toText());
     }
 
     @Override
     public void renderNode(OutputStream out) throws IOException {
-        HTML_INPUT1.writeTo(out);
-        getId().writeTo(out);
-        HTML_INPUT2.writeTo(out);
-        getId().writeTo(out);
-        (secret ? HTML_INPUT32 : HTML_INPUT31).writeTo(out);
-        renderText(out, getValue());
-        if (getCols() > 0) {
-            HTML_INPUT4.writeTo(out);
+        if (rows <= 1) {
+            HTML_INPUT1.writeTo(out);
+            getId().writeTo(out);
+            HTML_INPUT2.writeTo(out);
+            getId().writeTo(out);
+            (secret ? HTML_INPUT32 : HTML_INPUT31).writeTo(out);
+            renderText(out, getValue());
+            if (getCols() > 0) {
+                HTML_INPUT4.writeTo(out);
+                Text.valueOf(getCols(), 10).writeTo(out);
+            }
+            if (!isEditable()) {
+                HTML_READONLY.writeTo(out);
+            }
+            if (!isEnabled()) {
+                HTML_DISABLED.writeTo(out);
+            }
+            HTML_INPUT5.writeTo(out);
+        } else {
+            HTML_AREA1.writeTo(out);
+            getId().writeTo(out);
+            HTML_AREA2.writeTo(out);
+            getId().writeTo(out);
+            HTML_AREA3.writeTo(out);
+            Text.valueOf(getRows(), 10).writeTo(out);
+            HTML_AREA4.writeTo(out);
             Text.valueOf(getCols(), 10).writeTo(out);
+            if (!isEditable()) {
+                HTML_READONLY.writeTo(out);
+            }
+            if (!isEnabled()) {
+                HTML_DISABLED.writeTo(out);
+            }
+            HTML_AREA5.writeTo(out);
+            renderText(out, getValue());
+            HTML_AREA6.writeTo(out);
         }
-        HTML_INPUT5.writeTo(out);
     }
 
     public void setCols(int cols) {
         this.cols = cols;
+    }
+
+    public void setEditable(boolean editable) {
+        this.editable = editable;
     }
 
     public void setRows(int rows) {
@@ -138,8 +157,13 @@ public class HuiText extends HuiNode {
     }
 
     @Override
-    public void post(Text value, ActionHandler handler, HuiNode root) {
-        setValue(value);
+    public void loadState(InputStream in) throws IOException {
+        // text ist too big to fit into state
+    }
+
+    @Override
+    public void saveState(OutputStream out) throws IOException {
+        // text ist too big to fit into state
     }
 
 }

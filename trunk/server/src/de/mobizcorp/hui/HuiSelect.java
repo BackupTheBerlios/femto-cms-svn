@@ -58,9 +58,12 @@ public class HuiSelect extends HuiNode {
         options.add(value);
     }
 
-    @Override
-    public void appendState(OutputStream out) throws IOException {
-        RFC2279.write(getSelected(), out);
+    public void clear() {
+        options.clear();
+    }
+
+    public Text getOption(int index) {
+        return options.get(index);
     }
 
     public int getSelected() {
@@ -73,11 +76,19 @@ public class HuiSelect extends HuiNode {
     }
 
     @Override
+    public void post(Text value, ActionHandler handler, Path<HuiNode> path) {
+        setSelected(value.toInt(Text.MAX_RADIX));
+    }
+
+    @Override
     public void renderNode(OutputStream out) throws IOException {
         HTML_SELECT1.writeTo(out);
         getId().writeTo(out);
         HTML_SELECT2.writeTo(out);
         getId().writeTo(out);
+        if (!isEnabled()) {
+            HTML_DISABLED.writeTo(out);
+        }
         HTML_SELECT3.writeTo(out);
         final int end = options.size();
         for (int i = 0; i < end; i++) {
@@ -90,13 +101,13 @@ public class HuiSelect extends HuiNode {
         HTML_SELECT4.writeTo(out);
     }
 
-    public void setSelected(int selected) {
-        this.selected = selected;
+    @Override
+    public void saveState(OutputStream out) throws IOException {
+        RFC2279.write(getSelected(), out);
     }
 
-    @Override
-    public void post(Text value, ActionHandler handler, HuiNode root) {
-        setSelected(value.toInt(Text.MAX_RADIX));
+    public void setSelected(int selected) {
+        this.selected = selected;
     }
 
 }

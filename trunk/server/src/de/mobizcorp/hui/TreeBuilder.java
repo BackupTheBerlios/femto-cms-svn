@@ -18,13 +18,11 @@
  */
 package de.mobizcorp.hui;
 
-import de.mobizcorp.qu8ax.Text;
-
 /**
- * Action handler interface for HUI.
+ * Custom subtree builder interface for HUI.
  * 
  * @author Copyright(C) 2005 Klaus Rennecke, all rights reserved.
  */
-public interface ActionHandler {
-    public void action(Text name, Path<HuiNode> context);
+public interface TreeBuilder {
+    public void build(HuiNode parent, HuiNode root);
 }

@@ -18,7 +18,6 @@
  */
 package de.mobizcorp.hui;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -35,6 +34,8 @@ import de.mobizcorp.qu8ax.TextLoader;
  */
 public abstract class HuiNode {
 
+    public static final Text HTML_DISABLED;
+
     private static final Text HTML_FORM1, HTML_FORM2, HTML_FORM3;
 
     private static final Text HTML_PAGE1, HTML_PAGE2, HTML_PAGE3;
@@ -47,6 +48,7 @@ public abstract class HuiNode {
         HTML_PAGE1 = list.next();
         HTML_PAGE2 = list.next();
         HTML_PAGE3 = list.next();
+        HTML_DISABLED = list.next();
     }
 
     public static void renderText(final OutputStream out, final Text text)
@@ -75,6 +77,8 @@ public abstract class HuiNode {
 
     private int colSpan = 1;
 
+    private boolean enabled = true;
+
     private Text id;
 
     private int rowSpan = 1;
@@ -96,8 +100,6 @@ public abstract class HuiNode {
         }
         child.sibling = null; // prevent loops
     }
-
-    public abstract void appendState(OutputStream out) throws IOException;
 
     public int childCount() {
         HuiNode scan = child;
@@ -144,23 +146,56 @@ public abstract class HuiNode {
         return sibling;
     }
 
-    public Text getState() {
-        try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            out.write('/');
-            StateCodec codec = new StateCodec(out);
-            appendState(codec);
-            codec.close();
-            return Text.constant(out.toByteArray());
-        } catch (IOException e) {
-            return null;
-        }
+    public boolean isEnabled() {
+        return enabled;
     }
 
     public abstract void loadState(InputStream in) throws IOException;
 
-    public void post(Text value, ActionHandler handler, HuiNode root) {
+    public Path<HuiNode> path(final Text id) {
+        if (id.equals(getId())) {
+            return new Path<HuiNode>(this, null);
+        }
+        HuiNode scan = child;
+        while (scan != null) {
+            Path<HuiNode> found = scan.path(id);
+            if (found != null) {
+                return new Path<HuiNode>(this, found);
+            }
+            scan = scan.sibling;
+        }
+        return null;
+    }
+
+    public void post(Text value, ActionHandler handler, Path<HuiNode> path) {
         // no effect by default
+    }
+
+    public void removeAll() {
+        HuiNode scan = child;
+        child = null;
+        while (scan != null) {
+            HuiNode next = scan.sibling;
+            scan.sibling = null;
+            scan = next;
+        }
+    }
+
+    public void removeChild(HuiNode child) {
+        HuiNode scan = this.child;
+        if (scan == child) {
+            this.child = child.sibling;
+            child.sibling = null;
+            return;
+        }
+        while (scan != null) {
+            if (scan.sibling == child) {
+                scan.sibling = child.sibling;
+                child.sibling = null;
+                break;
+            }
+            scan = scan.sibling;
+        }
     }
 
     public abstract void renderNode(OutputStream out) throws IOException;
@@ -181,19 +216,21 @@ public abstract class HuiNode {
     public void renderTree(OutputStream out) throws IOException {
         HTML_FORM1.writeTo(out);
         StateCodec codec = new StateCodec(out);
-        appendState(codec);
+        saveState(codec);
         codec.flush();
         HTML_FORM2.writeTo(out);
         renderNode(out);
         HTML_FORM3.writeTo(out);
     }
 
-    public void setChild(HuiNode child) {
-        this.child = child;
-    }
+    public abstract void saveState(OutputStream out) throws IOException;
 
     public void setColSpan(int colSpan) {
         this.colSpan = colSpan;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 
     public void setId(Text id) {
@@ -204,8 +241,11 @@ public abstract class HuiNode {
         this.rowSpan = rowSpan;
     }
 
-    public void setSibling(HuiNode sibling) {
-        this.sibling = sibling;
+    public void writeState(OutputStream out) throws IOException {
+        out.write('/');
+        StateCodec codec = new StateCodec(out);
+        saveState(codec);
+        codec.flush();
     }
 
 }

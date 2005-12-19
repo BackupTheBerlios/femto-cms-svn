@@ -19,6 +19,7 @@
 package de.mobizcorp.qu8ax;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 
@@ -31,6 +32,9 @@ import java.io.UnsupportedEncodingException;
 public final class Text implements TextSequence {
 
     public static final Text EMPTY = constant();
+
+    public static final Text TRUE = constant((byte) 't', (byte) 'r',
+            (byte) 'u', (byte) 'e');
 
     public static final int MAX_RADIX = 36;
 
@@ -124,6 +128,20 @@ public final class Text implements TextSequence {
         byte[] copy = new byte[len];
         System.arraycopy(data, off, copy, 0, len);
         return new Text(copy, 0, len);
+    }
+
+    public static Text valueOf(InputStream in, int len) throws IOException {
+        final byte[] data = new byte[len];
+        int off = 0;
+        while (off < len) {
+            final int n = in.read(data, off, len - off);
+            if (n == -1) {
+                throw new IOException("end of file in text");
+            } else if (n > 0) {
+                off += n;
+            }
+        }
+        return Text.constant(data);
     }
 
     public static Text valueOf(int n, final int radix) {
@@ -337,6 +355,10 @@ public final class Text implements TextSequence {
             }
         }
         return true;
+    }
+
+    public boolean toBoolean() {
+        return equals(TRUE);
     }
 
     public byte[] toBytes() {

@@ -2,9 +2,12 @@
 <list version="1" xmlns="de.mobizcorp.qu8ax.TextLoader">
 	<!-- attributes -->
 	<text>action</text>
+	<text>class</text>
 	<text>cols</text>
 	<text>colspan</text>
 	<text>columns</text>
+	<text>editable</text>
+	<text>enabled</text>
 	<text>id</text>
 	<text>name</text>
 	<text>rows</text>
@@ -13,6 +16,8 @@
 	<text>selected</text>
 	<text>text</text>
 	<!-- tags -->
+	<text>bean</text>
+	<text>builder</text>
 	<text>button</text>
 	<text>combobox</text>
 	<text>label</text>

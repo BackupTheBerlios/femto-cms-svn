@@ -18,13 +18,48 @@
  */
 package de.mobizcorp.hui;
 
-import de.mobizcorp.qu8ax.Text;
-
 /**
- * Action handler interface for HUI.
+ * Path abstraction.
  * 
  * @author Copyright(C) 2005 Klaus Rennecke, all rights reserved.
  */
-public interface ActionHandler {
-    public void action(Text name, Path<HuiNode> context);
+public class Path<T> {
+
+    private final T node;
+    
+    private final Path<T> next;
+    
+    public Path(T node, Path<T> next) {
+        this.node = node;
+        this.next = next;
+    }
+
+    public Path getNext() {
+        return next;
+    }
+
+    public T getNode() {
+        return node;
+    }
+    
+    public T getLast() {
+        Path<T> scan = this;
+        while (scan.next != null) {
+            scan = scan.next;
+        }
+        return scan.node;
+    }
+    
+    public T getParent(T node) {
+        T last;
+        Path<T> scan = this;
+        while (scan != null) {
+            last = scan.node;
+            scan = scan.next;
+            if (scan.node == node) {
+                return last;
+            }
+        }
+        return null;
+    }
 }

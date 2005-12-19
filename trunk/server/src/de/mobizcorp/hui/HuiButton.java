@@ -33,7 +33,7 @@ import de.mobizcorp.qu8ax.TextLoader;
 public class HuiButton extends HuiLabel {
 
     private static final Text HTML_BUTTON1, HTML_BUTTON2, HTML_BUTTON3,
-            HTML_BUTTON4;
+            HTML_BUTTON4, HTML_BUTTON5;
 
     static {
         Iterator<Text> list = TextLoader.fromXML(HuiButton.class);
@@ -41,6 +41,7 @@ public class HuiButton extends HuiLabel {
         HTML_BUTTON2 = list.next();
         HTML_BUTTON3 = list.next();
         HTML_BUTTON4 = list.next();
+        HTML_BUTTON5 = list.next();
     }
 
     private Text action;
@@ -50,9 +51,9 @@ public class HuiButton extends HuiLabel {
     }
 
     @Override
-    public void post(Text value, ActionHandler handler, HuiNode root) {
+    public void post(Text value, ActionHandler handler, Path<HuiNode> path) {
         if (handler != null) {
-            handler.action(getAction(), this, root);
+            handler.action(getAction(), path);
         }
     }
 
@@ -62,9 +63,16 @@ public class HuiButton extends HuiLabel {
         getId().writeTo(out);
         HTML_BUTTON2.writeTo(out);
         getId().writeTo(out);
-        HTML_BUTTON3.writeTo(out);
-        renderText(out, getText());
+        if (getAction() != null) {
+            HTML_BUTTON3.writeTo(out);
+            getAction().writeTo(out);
+        }
+        if (!isEnabled()) {
+            HTML_DISABLED.writeTo(out);
+        }
         HTML_BUTTON4.writeTo(out);
+        renderText(out, getText());
+        HTML_BUTTON5.writeTo(out);
     }
 
     public void setAction(Text action) {

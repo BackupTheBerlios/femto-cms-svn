@@ -39,9 +39,9 @@ import de.mobizcorp.qu8ax.TextLoader;
  */
 public class HuiBuilder extends Sink {
 
-    private static final Text ID_ROOT = Text.constant((byte) '.', (byte) '0');
+    public static final Text ID_ROOT = Text.constant((byte) '.', (byte) '0');
 
-    private static final Text ID_SEPARATOR = Text.constant((byte) '.');
+    public static final Text ID_SEPARATOR = Text.constant((byte) '.');
 
     public static HuiNode build(InputStream in) throws IOException {
         HuiBuilder builder = new HuiBuilder();
@@ -50,9 +50,9 @@ public class HuiBuilder extends Sink {
         return builder.getRoot();
     }
 
-    private int ATT_ACTION, ATT_COLS, ATT_COLSPAN, ATT_COLUMNS, ATT_ID,
-            ATT_NAME, ATT_ROWS, ATT_ROWSPAN, ATT_SECRET, ATT_SELECTED,
-            ATT_TEXT;
+    private int ATT_ACTION, ATT_CLASS, ATT_COLS, ATT_COLSPAN, ATT_COLUMNS,
+            ATT_EDITABLE, ATT_ENABLED, ATT_ID, ATT_NAME, ATT_ROWS, ATT_ROWSPAN,
+            ATT_SECRET, ATT_SELECTED, ATT_TEXT;
 
     private final TextBuffer buffer = new TextBuffer();
 
@@ -62,11 +62,15 @@ public class HuiBuilder extends Sink {
 
     private int hereName;
 
+    private NamePool<Text> lNamePool;
+
+    private NamePool<NamePair> qNamePool;
+
     private HuiNode root;
 
-    private int TAG_BUTTON, TAG_COMBOBOX, TAG_LABEL, TAG_OPTION, TAG_PANEL,
-            TAG_PASSWORDFIELD, TAG_SELECT, TAG_TEXT, TAG_TEXTAREA,
-            TAG_TEXTFIELD;
+    private int TAG_BEAN, TAG_BUILDER, TAG_BUTTON, TAG_COMBOBOX, TAG_LABEL,
+            TAG_OPTION, TAG_PANEL, TAG_PASSWORDFIELD, TAG_SELECT, TAG_TEXT,
+            TAG_TEXTAREA, TAG_TEXTFIELD;
 
     public HuiNode getRoot() {
         return root;
@@ -75,16 +79,37 @@ public class HuiBuilder extends Sink {
     @Override
     public void handleAddAttribute(final int name, final Text value) {
         if (hereName == TAG_OPTION && name == ATT_TEXT) {
-            HuiNode parent = eltStack.peek();
+            final HuiNode parent = eltStack.peek();
             if (parent instanceof HuiSelect) {
                 ((HuiSelect) parent).addOption(value);
+            }
+        } else if (hereName == TAG_BUILDER && name == ATT_CLASS) {
+            try {
+                final TreeBuilder builder = (TreeBuilder) Class.forName(
+                        value.toString()).newInstance();
+                builder.build(eltStack.peek(), root);
+            } catch (Exception e) {
+                throw new ExceptionInInitializerError(e);
+            }
+        } else if (hereName == TAG_BEAN && name == ATT_CLASS) {
+            try {
+                final HuiNode bean = (HuiNode) Class.forName(value.toString())
+                        .newInstance();
+                final HuiNode parent = eltStack.peek();
+                final Text n = Text
+                        .valueOf(parent.childCount(), Text.MAX_RADIX);
+                bean.setId(new TextBuffer().append(parent.getId()).append(
+                        ID_SEPARATOR).append(n).toText());
+                parent.addChild(bean);
+                here = bean;
+            } catch (Exception e) {
+                throw new ExceptionInInitializerError(e);
             }
         }
         if (here == null) {
             // parsing unknown element
             return;
-        }
-        if (name == ATT_ACTION) {
+        } else if (name == ATT_ACTION) {
             if (here instanceof HuiButton) {
                 ((HuiButton) here).setAction(value);
             }
@@ -96,6 +121,12 @@ public class HuiBuilder extends Sink {
             }
         } else if (name == ATT_COLSPAN) {
             here.setColSpan(value.toInt(10));
+        } else if (name == ATT_EDITABLE) {
+            if (here instanceof HuiText) {
+                ((HuiText) here).setEditable(value.toBoolean());
+            }
+        } else if (name == ATT_ENABLED) {
+            here.setEnabled(value.toBoolean());
         } else if (name == ATT_ID || name == ATT_NAME) {
             here.setId(value);
         } else if (name == ATT_ROWS) {
@@ -121,6 +152,11 @@ public class HuiBuilder extends Sink {
                 ((HuiText) here).setValue(value);
             }
         }
+        if (here instanceof HuiBean) {
+            final NamePair pair = qNamePool.extern(name);
+            final Text lName = lNamePool.extern(pair.getB());
+            ((HuiBean) here).setAttribute(lName, value);
+        }
     }
 
     @Override
@@ -133,6 +169,8 @@ public class HuiBuilder extends Sink {
         here = eltStack.pop();
         if (here instanceof HuiLabel) {
             ((HuiLabel) here).setText(buffer.toText());
+        } else if (here instanceof HuiText) {
+            ((HuiText) here).setValue(buffer.toText());
         } else if (name == TAG_OPTION) {
             HuiNode parent = eltStack.peek();
             if (parent instanceof HuiSelect && buffer.size() > 0) {
@@ -145,12 +183,17 @@ public class HuiBuilder extends Sink {
     @Override
     public void handleOpenDocument(final NamePool<Text> l,
             final NamePool<NamePair> q) {
+        this.lNamePool = l;
+        this.qNamePool = q;
         final int mt = l.intern(Text.EMPTY);
         Iterator<Text> list = TextLoader.fromXML(HuiBuilder.class);
         ATT_ACTION = Parser.nameFor(mt, list.next(), q, l);
+        ATT_CLASS = Parser.nameFor(mt, list.next(), q, l);
         ATT_COLS = Parser.nameFor(mt, list.next(), q, l);
         ATT_COLSPAN = Parser.nameFor(mt, list.next(), q, l);
         ATT_COLUMNS = Parser.nameFor(mt, list.next(), q, l);
+        ATT_EDITABLE = Parser.nameFor(mt, list.next(), q, l);
+        ATT_ENABLED = Parser.nameFor(mt, list.next(), q, l);
         ATT_ID = Parser.nameFor(mt, list.next(), q, l);
         ATT_NAME = Parser.nameFor(mt, list.next(), q, l);
         ATT_ROWS = Parser.nameFor(mt, list.next(), q, l);
@@ -158,6 +201,8 @@ public class HuiBuilder extends Sink {
         ATT_SECRET = Parser.nameFor(mt, list.next(), q, l);
         ATT_SELECTED = Parser.nameFor(mt, list.next(), q, l);
         ATT_TEXT = Parser.nameFor(mt, list.next(), q, l);
+        TAG_BEAN = Parser.nameFor(mt, list.next(), q, l);
+        TAG_BUILDER = Parser.nameFor(mt, list.next(), q, l);
         TAG_BUTTON = Parser.nameFor(mt, list.next(), q, l);
         TAG_COMBOBOX = Parser.nameFor(mt, list.next(), q, l);
         TAG_LABEL = Parser.nameFor(mt, list.next(), q, l);

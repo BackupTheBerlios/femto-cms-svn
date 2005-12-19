@@ -88,7 +88,7 @@ public class TextLoader extends Sink {
                 return result;
             } else if ('0' <= b && b <= '9') {
                 int len = readInt(in, -(b - '0'), ':');
-                result.add(readText(in, len));
+                result.add(Text.valueOf(in, len));
             } else {
                 break;
             }
@@ -119,21 +119,6 @@ public class TextLoader extends Sink {
             }
         }
         throw new IOException("invalid number format: '" + (char) b + "'");
-    }
-
-    private final static Text readText(final InputStream in, final int len)
-            throws IOException {
-        final byte[] data = new byte[len];
-        int off = 0;
-        while (off < len) {
-            final int n = in.read(data, off, len - off);
-            if (n == -1) {
-                throw new IOException("end of file in text");
-            } else if (n > 0) {
-                off += n;
-            }
-        }
-        return Text.constant(data);
     }
 
     private final ArrayList<Text> list = new ArrayList<Text>();

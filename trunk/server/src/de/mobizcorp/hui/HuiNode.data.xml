@@ -8,8 +8,12 @@
 ]]></text>
 	<!-- page -->
 	<text><![CDATA[<html><head><title>]]></text>
-	<text><![CDATA[</title></head><body>
+	<text><![CDATA[</title>
+<style type="text/css">
+@import url(base.css);
+</style></head><body>
 ]]></text>
 	<text><![CDATA[</body></html>
 ]]></text>
+	<text>" disabled="disabled</text>
 </list>

@@ -23,10 +23,10 @@ import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
 
 import de.mobizcorp.qu8ax.Text;
 import de.mobizcorp.qu8ax.TextBuffer;
@@ -133,7 +133,8 @@ public class MiniServer extends Thread {
 
     private final ActionHandler handler;
 
-    public MiniServer(HuiNode model, ActionHandler handler, ServerSocket endpoint) {
+    public MiniServer(HuiNode model, ActionHandler handler,
+            ServerSocket endpoint) {
         this.model = model;
         this.handler = handler;
         this.endpoint = endpoint;
@@ -175,6 +176,29 @@ public class MiniServer extends Thread {
                 .getOutputStream());
         try {
             int slash = url.lastIndexOf('/');
+            if (url.lastIndexOf('.') != -1) {
+                final String name;
+                if (slash != -1) {
+                    name = url.part(slash + 1, url.size() - slash - 1)
+                            .toString();
+                } else {
+                    name = url.toString();
+                }
+                InputStream file = MiniServer.class.getResourceAsStream(name);
+                if (in != null)
+                    try {
+                        byte[] data = new byte[8192];
+                        int n;
+                        while ((n = file.read(data)) != -1) {
+                            if (n > 0) {
+                                out.write(data, 0, n);
+                            }
+                        }
+                        return;
+                    } finally {
+                        file.close();
+                    }
+            }
             if (slash != -1 && slash < url.size() - 1) {
                 byte[] state = StateCodec.fromBase64(url.part(slash + 1,
                         url.size() - slash - 1).toBytes());
@@ -187,15 +211,17 @@ public class MiniServer extends Thread {
                     Text post = tp.next();
                     int q = post.indexOf(equal);
                     if (q != -1) {
-                        HuiNode node = model.find(urldecode(post.part(0, q)));
-                        if (node != null) {
-                            node.post(urldecode(post.part(q + 1, post.size()
-                                    - q - 1)), handler, model);
+                        final Text id = urldecode(post.part(0, q));
+                        Path<HuiNode> path = model.path(id);
+                        if (path != null) {
+                            final Text message = urldecode(post.part(q + 1,
+                                    post.size() - q - 1));
+                            path.getLast().post(message, handler, path);
                         }
                     }
                 }
                 HTTP_REDIRECT1.writeTo(out);
-                model.getState().writeTo(out);
+                model.writeState(out);
                 HTTP_REDIRECT2.writeTo(out);
             } else {
                 HTTP_RESPONSE.writeTo(out);
@@ -221,7 +247,7 @@ public class MiniServer extends Thread {
                         handle(socket, in, request, buffer);
                     }
                     in.close();
-                } catch (SocketException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 } finally {
                     socket.close();

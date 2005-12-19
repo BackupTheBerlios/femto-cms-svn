@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<list version="1" xmlns="de.mobizcorp.qu8ax.TextLoader">
+	<!-- text field -->
+	<text><![CDATA[<input id="]]></text>
+	<text><![CDATA[" name="]]></text>
+	<text><![CDATA[" type="text" value="]]></text>
+	<text><![CDATA[" type="password" value="]]></text>
+	<text><![CDATA[" size="]]></text>
+	<text><![CDATA[">
+]]></text>
+	<!-- text area -->
+	<text><![CDATA[<textarea id="]]></text>
+	<text><![CDATA[" name="]]></text>
+	<text><![CDATA[" rows="]]></text>
+	<text><![CDATA[" cols="]]></text>
+	<text><![CDATA[">
+]]></text>
+	<text><![CDATA[</textarea>]]></text>
+	<text><![CDATA[" readonly="readonly]]></text>
+</list>

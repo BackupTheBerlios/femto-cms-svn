@@ -67,15 +67,6 @@ public class HuiPanel extends HuiNode {
 
     private Text title;
 
-    @Override
-    public void appendState(OutputStream out) throws IOException {
-        HuiNode scan = getChild();
-        while (scan != null) {
-            scan.appendState(out);
-            scan = scan.getSibling();
-        }
-    }
-
     public int getCols() {
         return cols;
     }
@@ -118,6 +109,15 @@ public class HuiPanel extends HuiNode {
             scan = scan.getSibling();
         }
         HTML_TAB_CLOSE.writeTo(out);
+    }
+
+    @Override
+    public void saveState(OutputStream out) throws IOException {
+        HuiNode scan = getChild();
+        while (scan != null) {
+            scan.saveState(out);
+            scan = scan.getSibling();
+        }
     }
 
     public void setCols(int cols) {
