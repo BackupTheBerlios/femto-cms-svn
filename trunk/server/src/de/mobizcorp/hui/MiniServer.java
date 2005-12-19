@@ -199,7 +199,7 @@ public class MiniServer extends Thread {
                 HTTP_REDIRECT2.writeTo(out);
             } else {
                 HTTP_RESPONSE.writeTo(out);
-                model.renderTree(out);
+                model.renderPage(out);
             }
         } finally {
             out.close();

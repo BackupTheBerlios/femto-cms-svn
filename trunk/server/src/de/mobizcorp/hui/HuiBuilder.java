@@ -50,25 +50,9 @@ public class HuiBuilder extends Sink {
         return builder.getRoot();
     }
 
-    private int ATT_ACTION;
-
-    private int ATT_COLS;
-
-    private int ATT_COLSPAN;
-
-    private int ATT_COLUMNS;
-
-    private int ATT_ID;
-
-    private int ATT_NAME;
-
-    private int ATT_ROWS;
-
-    private int ATT_ROWSPAN;
-
-    private int ATT_SECRET;
-
-    private int ATT_TEXT;
+    private int ATT_ACTION, ATT_COLS, ATT_COLSPAN, ATT_COLUMNS, ATT_ID,
+            ATT_NAME, ATT_ROWS, ATT_ROWSPAN, ATT_SECRET, ATT_SELECTED,
+            ATT_TEXT;
 
     private final TextBuffer buffer = new TextBuffer();
 
@@ -76,21 +60,13 @@ public class HuiBuilder extends Sink {
 
     private HuiNode here;
 
+    private int hereName;
+
     private HuiNode root;
 
-    private int TAG_BUTTON;
-
-    private int TAG_LABEL;
-
-    private int TAG_PANEL;
-
-    private int TAG_PASSWORDFIELD;
-
-    private int TAG_TEXT;
-
-    private int TAG_TEXTAREA;
-
-    private int TAG_TEXTFIELD;
+    private int TAG_BUTTON, TAG_COMBOBOX, TAG_LABEL, TAG_OPTION, TAG_PANEL,
+            TAG_PASSWORDFIELD, TAG_SELECT, TAG_TEXT, TAG_TEXTAREA,
+            TAG_TEXTFIELD;
 
     public HuiNode getRoot() {
         return root;
@@ -98,6 +74,12 @@ public class HuiBuilder extends Sink {
 
     @Override
     public void handleAddAttribute(final int name, final Text value) {
+        if (hereName == TAG_OPTION && name == ATT_TEXT) {
+            HuiNode parent = eltStack.peek();
+            if (parent instanceof HuiSelect) {
+                ((HuiSelect) parent).addOption(value);
+            }
+        }
         if (here == null) {
             // parsing unknown element
             return;
@@ -126,9 +108,15 @@ public class HuiBuilder extends Sink {
             if (here instanceof HuiText) {
                 ((HuiText) here).setSecret(value.size() > 0);
             }
+        } else if (name == ATT_SELECTED) {
+            if (here instanceof HuiSelect) {
+                ((HuiSelect) here).setSelected(value.toInt(10));
+            }
         } else if (name == ATT_TEXT) {
             if (here instanceof HuiLabel) {
                 ((HuiLabel) here).setText(value);
+            } else if (here instanceof HuiPanel) {
+                ((HuiPanel) here).setTitle(value);
             } else if (here instanceof HuiText) {
                 ((HuiText) here).setValue(value);
             }
@@ -145,6 +133,11 @@ public class HuiBuilder extends Sink {
         here = eltStack.pop();
         if (here instanceof HuiLabel) {
             ((HuiLabel) here).setText(buffer.toText());
+        } else if (name == TAG_OPTION) {
+            HuiNode parent = eltStack.peek();
+            if (parent instanceof HuiSelect && buffer.size() > 0) {
+                ((HuiSelect) parent).addOption(buffer.toText());
+            }
         }
         buffer.clear();
     }
@@ -154,23 +147,27 @@ public class HuiBuilder extends Sink {
             final NamePool<NamePair> q) {
         final int mt = l.intern(Text.EMPTY);
         Iterator<Text> list = TextLoader.fromXML(HuiBuilder.class);
-        this.ATT_ACTION = Parser.nameFor(mt, list.next(), q, l);
-        this.ATT_COLS = Parser.nameFor(mt, list.next(), q, l);
-        this.ATT_COLSPAN = Parser.nameFor(mt, list.next(), q, l);
-        this.ATT_COLUMNS = Parser.nameFor(mt, list.next(), q, l);
-        this.ATT_ID = Parser.nameFor(mt, list.next(), q, l);
-        this.ATT_NAME = Parser.nameFor(mt, list.next(), q, l);
-        this.ATT_ROWS = Parser.nameFor(mt, list.next(), q, l);
-        this.ATT_ROWSPAN = Parser.nameFor(mt, list.next(), q, l);
-        this.ATT_SECRET = Parser.nameFor(mt, list.next(), q, l);
-        this.ATT_TEXT = Parser.nameFor(mt, list.next(), q, l);
-        this.TAG_BUTTON = Parser.nameFor(mt, list.next(), q, l);
-        this.TAG_LABEL = Parser.nameFor(mt, list.next(), q, l);
-        this.TAG_PANEL = Parser.nameFor(mt, list.next(), q, l);
-        this.TAG_PASSWORDFIELD = Parser.nameFor(mt, list.next(), q, l);
-        this.TAG_TEXT = Parser.nameFor(mt, list.next(), q, l);
-        this.TAG_TEXTFIELD = Parser.nameFor(mt, list.next(), q, l);
-        this.TAG_TEXTAREA = Parser.nameFor(mt, list.next(), q, l);
+        ATT_ACTION = Parser.nameFor(mt, list.next(), q, l);
+        ATT_COLS = Parser.nameFor(mt, list.next(), q, l);
+        ATT_COLSPAN = Parser.nameFor(mt, list.next(), q, l);
+        ATT_COLUMNS = Parser.nameFor(mt, list.next(), q, l);
+        ATT_ID = Parser.nameFor(mt, list.next(), q, l);
+        ATT_NAME = Parser.nameFor(mt, list.next(), q, l);
+        ATT_ROWS = Parser.nameFor(mt, list.next(), q, l);
+        ATT_ROWSPAN = Parser.nameFor(mt, list.next(), q, l);
+        ATT_SECRET = Parser.nameFor(mt, list.next(), q, l);
+        ATT_SELECTED = Parser.nameFor(mt, list.next(), q, l);
+        ATT_TEXT = Parser.nameFor(mt, list.next(), q, l);
+        TAG_BUTTON = Parser.nameFor(mt, list.next(), q, l);
+        TAG_COMBOBOX = Parser.nameFor(mt, list.next(), q, l);
+        TAG_LABEL = Parser.nameFor(mt, list.next(), q, l);
+        TAG_OPTION = Parser.nameFor(mt, list.next(), q, l);
+        TAG_PANEL = Parser.nameFor(mt, list.next(), q, l);
+        TAG_PASSWORDFIELD = Parser.nameFor(mt, list.next(), q, l);
+        TAG_SELECT = Parser.nameFor(mt, list.next(), q, l);
+        TAG_TEXT = Parser.nameFor(mt, list.next(), q, l);
+        TAG_TEXTFIELD = Parser.nameFor(mt, list.next(), q, l);
+        TAG_TEXTAREA = Parser.nameFor(mt, list.next(), q, l);
     }
 
     @Override
@@ -181,6 +178,7 @@ public class HuiBuilder extends Sink {
 
     @Override
     public void handleStartElement(final int name) {
+        hereName = name;
         final HuiNode parent = eltStack.empty() ? null : eltStack.peek();
         if (name == TAG_BUTTON) {
             here = new HuiButton();
@@ -192,6 +190,8 @@ public class HuiBuilder extends Sink {
             HuiText text = new HuiText();
             text.setSecret(true);
             here = text;
+        } else if (name == TAG_SELECT || name == TAG_COMBOBOX) {
+            here = new HuiSelect();
         } else if (name == TAG_TEXT || name == TAG_TEXTFIELD
                 || name == TAG_TEXTAREA) {
             here = new HuiText();

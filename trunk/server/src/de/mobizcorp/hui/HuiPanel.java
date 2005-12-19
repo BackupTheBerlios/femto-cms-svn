@@ -65,6 +65,8 @@ public class HuiPanel extends HuiNode {
 
     private int cols;
 
+    private Text title;
+
     @Override
     public void appendState(OutputStream out) throws IOException {
         HuiNode scan = getChild();
@@ -76,6 +78,10 @@ public class HuiPanel extends HuiNode {
 
     public int getCols() {
         return cols;
+    }
+
+    public Text getTitle() {
+        return title;
     }
 
     @Override
@@ -116,6 +122,10 @@ public class HuiPanel extends HuiNode {
 
     public void setCols(int cols) {
         this.cols = cols;
+    }
+
+    public void setTitle(Text title) {
+        this.title = title;
     }
 
 }

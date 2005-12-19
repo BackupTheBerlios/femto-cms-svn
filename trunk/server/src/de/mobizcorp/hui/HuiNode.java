@@ -22,9 +22,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Iterator;
 
 import de.mobizcorp.qu8ax.Resolver;
 import de.mobizcorp.qu8ax.Text;
+import de.mobizcorp.qu8ax.TextLoader;
 
 /**
  * Base class for all HUI elements.
@@ -33,20 +35,19 @@ import de.mobizcorp.qu8ax.Text;
  */
 public abstract class HuiNode {
 
-    private static final Text HTML_FORM1 = Text.constant((byte) '<',
-            (byte) 'f', (byte) 'o', (byte) 'r', (byte) 'm', (byte) ' ',
-            (byte) 'a', (byte) 'c', (byte) 't', (byte) 'i', (byte) 'o',
-            (byte) 'n', (byte) '=', (byte) '"', (byte) '/');
+    private static final Text HTML_FORM1, HTML_FORM2, HTML_FORM3;
 
-    private static final Text HTML_FORM2 = Text.constant((byte) '"',
-            (byte) ' ', (byte) 'm', (byte) 'e', (byte) 't', (byte) 'h',
-            (byte) 'o', (byte) 'd', (byte) '=', (byte) '"', (byte) 'P',
-            (byte) 'O', (byte) 'S', (byte) 'T', (byte) '"', (byte) '>',
-            (byte) '\n');
+    private static final Text HTML_PAGE1, HTML_PAGE2, HTML_PAGE3;
 
-    private static final Text HTML_FORM3 = Text.constant((byte) '<',
-            (byte) '/', (byte) 'f', (byte) 'o', (byte) 'r', (byte) 'm',
-            (byte) '>', (byte) '\n');
+    static {
+        Iterator<Text> list = TextLoader.fromXML(HuiNode.class);
+        HTML_FORM1 = list.next();
+        HTML_FORM2 = list.next();
+        HTML_FORM3 = list.next();
+        HTML_PAGE1 = list.next();
+        HTML_PAGE2 = list.next();
+        HTML_PAGE3 = list.next();
+    }
 
     public static void renderText(final OutputStream out, final Text text)
             throws IOException {
@@ -81,6 +82,9 @@ public abstract class HuiNode {
     private HuiNode sibling;
 
     public void addChild(final HuiNode child) {
+        if (this == child) {
+            throw new IllegalArgumentException("loop");
+        }
         HuiNode scan = this.child;
         if (scan == null) {
             this.child = child;
@@ -160,6 +164,19 @@ public abstract class HuiNode {
     }
 
     public abstract void renderNode(OutputStream out) throws IOException;
+
+    public void renderPage(OutputStream out) throws IOException {
+        HTML_PAGE1.writeTo(out);
+        if (this instanceof HuiPanel) {
+            final Text title = ((HuiPanel) this).getTitle();
+            if (title != null) {
+                title.writeTo(out);
+            }
+        }
+        HTML_PAGE2.writeTo(out);
+        renderTree(out);
+        HTML_PAGE3.writeTo(out);
+    }
 
     public void renderTree(OutputStream out) throws IOException {
         HTML_FORM1.writeTo(out);

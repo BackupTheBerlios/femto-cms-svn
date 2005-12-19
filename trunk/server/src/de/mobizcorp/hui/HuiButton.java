@@ -20,8 +20,10 @@ package de.mobizcorp.hui;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Iterator;
 
 import de.mobizcorp.qu8ax.Text;
+import de.mobizcorp.qu8ax.TextLoader;
 
 /**
  * Text button HUI element.
@@ -30,23 +32,16 @@ import de.mobizcorp.qu8ax.Text;
  */
 public class HuiButton extends HuiLabel {
 
-    private static final Text HTML_INPUT1 = Text.constant((byte) '<',
-            (byte) 'i', (byte) 'n', (byte) 'p', (byte) 'u', (byte) 't',
-            (byte) ' ', (byte) 'i', (byte) 'd', (byte) '=', (byte) '"');
+    private static final Text HTML_BUTTON1, HTML_BUTTON2, HTML_BUTTON3,
+            HTML_BUTTON4;
 
-    private static final Text HTML_INPUT2 = Text.constant((byte) '"',
-            (byte) ' ', (byte) 'n', (byte) 'a', (byte) 'm', (byte) 'e',
-            (byte) '=', (byte) '"');
-
-    private static final Text HTML_INPUT3 = Text.constant((byte) '"',
-            (byte) ' ', (byte) 't', (byte) 'y', (byte) 'p', (byte) 'e',
-            (byte) '=', (byte) '"', (byte) 's', (byte) 'u', (byte) 'b',
-            (byte) 'm', (byte) 'i', (byte) 't', (byte) '"', (byte) ' ',
-            (byte) 'v', (byte) 'a', (byte) 'l', (byte) 'u', (byte) 'e',
-            (byte) '=', (byte) '"');
-
-    private static final Text HTML_INPUT4 = Text.constant((byte) '"',
-            (byte) '>', (byte) '\n');
+    static {
+        Iterator<Text> list = TextLoader.fromXML(HuiButton.class);
+        HTML_BUTTON1 = list.next();
+        HTML_BUTTON2 = list.next();
+        HTML_BUTTON3 = list.next();
+        HTML_BUTTON4 = list.next();
+    }
 
     private Text action;
 
@@ -63,13 +58,13 @@ public class HuiButton extends HuiLabel {
 
     @Override
     public void renderNode(OutputStream out) throws IOException {
-        HTML_INPUT1.writeTo(out);
+        HTML_BUTTON1.writeTo(out);
         getId().writeTo(out);
-        HTML_INPUT2.writeTo(out);
+        HTML_BUTTON2.writeTo(out);
         getId().writeTo(out);
-        HTML_INPUT3.writeTo(out);
+        HTML_BUTTON3.writeTo(out);
         renderText(out, getText());
-        HTML_INPUT4.writeTo(out);
+        HTML_BUTTON4.writeTo(out);
     }
 
     public void setAction(Text action) {

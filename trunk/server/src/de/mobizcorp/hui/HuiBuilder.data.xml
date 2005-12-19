@@ -10,12 +10,16 @@
 	<text>rows</text>
 	<text>rowspan</text>
 	<text>secret</text>
+	<text>selected</text>
 	<text>text</text>
 	<!-- tags -->
 	<text>button</text>
+	<text>combobox</text>
 	<text>label</text>
+	<text>option</text>
 	<text>panel</text>
 	<text>passwordfield</text>
+	<text>select</text>
 	<text>text</text>
 	<text>textfield</text>
 	<text>textarea</text>
