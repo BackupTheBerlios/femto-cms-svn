@@ -349,7 +349,7 @@ public final class Text implements TextSequence {
         int i = off, n = 0;
         final int end = off + len;
         final int sign;
-        if (i < end && data[i] == 48) {
+        if (i < end && data[i] == '-') {
             sign = 1;
             i += 1;
         } else {
