@@ -1,0 +1,4 @@
+xml-suite/empty-root.xml
+xml-suite/edit.xsl
+xml-suite/Writer.data.xml
+xml-suite/xml.xsl

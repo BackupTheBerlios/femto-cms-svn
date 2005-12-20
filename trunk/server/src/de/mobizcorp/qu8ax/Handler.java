@@ -18,28 +18,32 @@
  */
 package de.mobizcorp.qu8ax;
 
+import java.io.IOException;
+
 /**
  * Handler interface.
  * 
  * @author Copyright(C) 2005 Klaus Rennecke, all rights reserved.
  */
 public interface Handler {
-    public void handleAddAttribute(int name, Text value);
+    public void handleAddAttribute(int name, Text value) throws IOException;
 
-    public void handleCharacterData(boolean parsed, Text value);
+    public void handleCharacterData(boolean parsed, Text value)
+            throws IOException;
 
-    public void handleCloseDocument();
+    public void handleCloseDocument() throws IOException;
 
-    public void handleCloseElement(int name);
+    public void handleCloseElement(int name) throws IOException;
 
-    public void handleInstruction(Text target, Text value);
+    public void handleInstruction(Text target, Text value) throws IOException;
 
     public void handleOpenDocument(NamePool<Text> lNames,
-            NamePool<NamePair> qNames);
+            NamePool<NamePair> qNames) throws IOException;
 
-    public void handleOpenElement(int name);
+    public void handleOpenElement(int name) throws IOException;
 
-    public void handleStartElement(int name);
+    public void handleStartElement(int name) throws IOException;
 
-    public void handleWhitespace(boolean comment, Text value);
+    public void handleWhitespace(boolean comment, Text value)
+            throws IOException;
 }

@@ -18,6 +18,8 @@
  */
 package de.mobizcorp.qu8ax;
 
+import java.io.IOException;
+
 /**
  * Simple generic filter base class.
  * 
@@ -35,40 +37,42 @@ public class Filter implements Handler {
         return delegate;
     }
 
-    public void handleAddAttribute(int name, Text value) {
+    public void handleAddAttribute(int name, Text value) throws IOException {
         delegate.handleAddAttribute(name, value);
     }
 
-    public void handleCharacterData(boolean parsed, Text value) {
+    public void handleCharacterData(boolean parsed, Text value)
+            throws IOException {
         delegate.handleCharacterData(parsed, value);
     }
 
-    public void handleCloseDocument() {
+    public void handleCloseDocument() throws IOException {
         delegate.handleCloseDocument();
     }
 
-    public void handleCloseElement(int name) {
+    public void handleCloseElement(int name) throws IOException {
         delegate.handleCloseElement(name);
     }
 
-    public void handleInstruction(Text target, Text value) {
+    public void handleInstruction(Text target, Text value) throws IOException {
         delegate.handleInstruction(target, value);
     }
 
     public void handleOpenDocument(NamePool<Text> lNames,
-            NamePool<NamePair> qNames) {
+            NamePool<NamePair> qNames) throws IOException {
         delegate.handleOpenDocument(lNames, qNames);
     }
 
-    public void handleOpenElement(int name) {
+    public void handleOpenElement(int name) throws IOException {
         delegate.handleOpenElement(name);
     }
 
-    public void handleStartElement(int name) {
+    public void handleStartElement(int name) throws IOException {
         delegate.handleStartElement(name);
     }
 
-    public void handleWhitespace(boolean comment, Text value) {
+    public void handleWhitespace(boolean comment, Text value)
+            throws IOException {
         delegate.handleWhitespace(comment, value);
     }
 }

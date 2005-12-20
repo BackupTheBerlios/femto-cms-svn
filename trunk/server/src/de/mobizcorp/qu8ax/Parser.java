@@ -519,15 +519,14 @@ public class Parser {
                         + s.buffer + "'");
             }
             if (name.equals(XMLNS)) {
-                Text prefix = Text.EMPTY;
-                c.push(new NamePair(s.lNamePool.intern(prefix), s.lNamePool
-                        .intern(value)));
+                final int px = s.lNamePool.intern(Text.EMPTY);
+                c.push(new NamePair(px, s.lNamePool.intern(value)));
                 return attrRing;
             } else if (name.startsWith(XMLNS_)) {
-                Text prefix = name.part(XMLNS_.size(), name.size()
+                final Text prefix = name.part(XMLNS_.size(), name.size()
                         - XMLNS_.size());
-                c.push(new NamePair(s.lNamePool.intern(prefix), s.lNamePool
-                        .intern(value)));
+                final int px = s.lNamePool.intern(prefix);
+                c.push(new NamePair(px, s.lNamePool.intern(value)));
                 return attrRing;
             }
             AttrNode node = new AttrNode(name, value);
@@ -603,11 +602,15 @@ public class Parser {
                         continue;
                     }
                     break;
+                } else if (c == -1) {
+                    throw new SyntaxError(
+                            "end of file in CDATA section after '" + s.buffer
+                                    + "'");
                 } else if (!isValidChar(c)) {
                     s.unread();
                     throw new SyntaxError("invalid character 0x"
-                            + Integer.toHexString(c) + " after '" + s.buffer
-                            + "'");
+                            + Integer.toHexString(c)
+                            + " in CDATA section after '" + s.buffer + "'");
                 }
             }
             h.handleCharacterData(false, s.buffer.part(0, s.buffer.size() - 3));
@@ -777,6 +780,30 @@ public class Parser {
                 }
                 return false;
             }
+            c = s.read();
+            if (c == '#') {
+                // FIXME: this is copy-paste from nt_Reference
+                int radix;
+                c = s.read();
+                if (c == 'x') {
+                    radix = 16;
+                    c = s.read();
+                } else {
+                    radix = 10;
+                }
+                while (Character.digit(c, radix) != -1) {
+                    c = s.read();
+                }
+                if (c != ';') {
+                    if (c != -1) {
+                        s.unread();
+                    }
+                    throw new SyntaxError("unterminated character reference");
+                }
+                return true;
+            } else {
+                s.unread();
+            }
             if (!nt_Name(s)) {
                 s.unread();
                 return false;
@@ -899,9 +926,14 @@ public class Parser {
                 if ((c = s.read()) != ';') {
                     throw new SyntaxError("unterminated entity reference");
                 }
-                Text entityName = s.buffer.part(start + 1, s.buffer.size()
-                        - start - 2);
+                Text entityName = s.buffer.part(start, s.buffer.size() - start
+                        - 1);
                 result = p.resolver.resolveInternal(entityName);
+                if (result == null) {
+                    throw new IOException(
+                            "unresolved internal entity reference: '"
+                                    + entityName + "'");
+                }
             }
             p.handler.handleCharacterData(true, result);
             return true;

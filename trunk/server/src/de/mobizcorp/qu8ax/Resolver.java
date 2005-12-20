@@ -42,6 +42,16 @@ public class Resolver {
 
     public static final Resolver INSTANCE = new Resolver();
 
+    public static final Text NAME_AMP = Text.constant((byte) 'a', (byte) 'm',
+            (byte) 'p');
+
+    public static final Text NAME_GT = Text.constant((byte) 'g', (byte) 't');
+
+    public static final Text NAME_LT = Text.constant((byte) 'l', (byte) 't');
+
+    public static final Text NAME_QUOT = Text.constant((byte) 'q', (byte) 'u',
+            (byte) 'o', (byte) 't');
+
     public static final Text VAL_AMP = Text.constant((byte) '&');
 
     public static final Text VAL_GT = Text.constant((byte) '>');
@@ -59,16 +69,27 @@ public class Resolver {
     }
 
     public Text resolveInternal(Text spec) {
-        if (ENT_AMP.equals(spec)) {
+        if (NAME_AMP.equals(spec)) {
             return VAL_AMP;
-        } else if (ENT_GT.equals(spec)) {
+        } else if (NAME_GT.equals(spec)) {
             return VAL_GT;
-        } else if (ENT_LT.equals(spec)) {
+        } else if (NAME_LT.equals(spec)) {
             return VAL_LT;
-        } else if (ENT_QUOT.equals(spec)) {
+        } else if (NAME_QUOT.equals(spec)) {
             return VAL_QUOT;
         } else {
-            return null;
+            if (spec.size() > 1 && spec.getByte(0) == '#') {
+                // character literal
+                int c;
+                if (spec.getByte(1) == 'x') {
+                    c = spec.part(2, spec.size() - 2).toInt(16);
+                } else {
+                    c = spec.part(1, spec.size() - 1).toInt(10);
+                }
+                return new TextBuffer(4).append(c).toText();
+            } else {
+                return null;
+            }
         }
     }
 }
