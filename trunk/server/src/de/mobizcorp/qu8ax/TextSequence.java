@@ -77,6 +77,12 @@ public interface TextSequence {
 	 * @return the Text.
 	 */
 	public Text toText();
+    
+    /**
+     * Concatenate this with the given text. If this is mutable, the sequence
+     * is altered as well.
+     */
+    public TextSequence concat(Text text);
 
 	/**
 	 * Write the data of this text sequence to the output byte array <var>out</var>.

@@ -199,6 +199,16 @@ public final class Text implements TextSequence {
         }
     }
 
+    public TextSequence concat(Text text) {
+        if (len == 0) {
+            return text;
+        } else if (text.len == 0) {
+            return this;
+        } else {
+            return new TextBuffer(len + text.len).append(this).append(text);
+        }
+    }
+
     public boolean endsWith(final Text t) {
         return lastIndexOf(t, len - t.len, 1) == 0;
     }

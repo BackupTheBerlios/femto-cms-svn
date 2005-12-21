@@ -27,9 +27,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Iterator;
 
 import de.mobizcorp.qu8ax.Text;
 import de.mobizcorp.qu8ax.TextBuffer;
+import de.mobizcorp.qu8ax.TextLoader;
 import de.mobizcorp.qu8ax.TextParser;
 
 /**
@@ -61,19 +63,13 @@ public class MiniServer extends Thread {
     private static final Text HTTP_REDIRECT2 = Text.constant((byte) '\r',
             (byte) '\n', (byte) '\r', (byte) '\n');
 
-    private static final Text HTTP_RESPONSE = Text.constant((byte) 'H',
-            (byte) 'T', (byte) 'T', (byte) 'P', (byte) '/', (byte) '1',
-            (byte) '.', (byte) '0', (byte) ' ', (byte) '2', (byte) '0',
-            (byte) '0', (byte) ' ', (byte) 'O', (byte) 'K', (byte) '\r',
-            (byte) '\n', (byte) 'C', (byte) 'o', (byte) 'n', (byte) 't',
-            (byte) 'e', (byte) 'n', (byte) 't', (byte) '-', (byte) 'T',
-            (byte) 'y', (byte) 'p', (byte) 'e', (byte) ':', (byte) ' ',
-            (byte) 't', (byte) 'e', (byte) 'x', (byte) 't', (byte) '/',
-            (byte) 'h', (byte) 't', (byte) 'm', (byte) 'l', (byte) ';',
-            (byte) 'c', (byte) 'h', (byte) 'a', (byte) 'r', (byte) 's',
-            (byte) 'e', (byte) 't', (byte) '=', (byte) 'U', (byte) 'T',
-            (byte) 'F', (byte) '-', (byte) '8', (byte) '\r', (byte) '\n',
-            (byte) '\r', (byte) '\n');
+    private static final Text HTTP_RESPONSE_200, HTTP_RESPONSE_404;
+
+    static {
+        Iterator<Text> list = TextLoader.fromXML(MiniServer.class);
+        HTTP_RESPONSE_200 = list.next();
+        HTTP_RESPONSE_404 = list.next();
+    }
 
     public static void main(String args[]) {
         try {
@@ -185,7 +181,7 @@ public class MiniServer extends Thread {
                     name = url.toString();
                 }
                 InputStream file = MiniServer.class.getResourceAsStream(name);
-                if (in != null)
+                if (file != null) {
                     try {
                         byte[] data = new byte[8192];
                         int n;
@@ -198,6 +194,10 @@ public class MiniServer extends Thread {
                     } finally {
                         file.close();
                     }
+                } else {
+                    HTTP_RESPONSE_404.writeTo(out);
+                    return;
+                }
             }
             if (slash != -1 && slash < url.size() - 1) {
                 byte[] state = StateCodec.fromBase64(url.part(slash + 1,
@@ -224,7 +224,7 @@ public class MiniServer extends Thread {
                 model.writeState(out);
                 HTTP_REDIRECT2.writeTo(out);
             } else {
-                HTTP_RESPONSE.writeTo(out);
+                HTTP_RESPONSE_200.writeTo(out);
                 model.renderPage(out);
             }
         } finally {

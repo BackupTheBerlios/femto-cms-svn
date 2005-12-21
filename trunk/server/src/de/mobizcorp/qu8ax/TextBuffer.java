@@ -179,6 +179,10 @@ public final class TextBuffer implements TextSequence {
             this.data = EMPTY_BUFFER;
         }
     }
+    
+    public TextSequence concat(Text text) {
+        return append(text);
+    }
 
     @Override
     public boolean equals(Object other) {

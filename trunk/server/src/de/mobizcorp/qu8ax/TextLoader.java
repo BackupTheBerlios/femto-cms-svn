@@ -125,7 +125,7 @@ public class TextLoader extends Sink {
 
     private int TAG_TEXT;
 
-    private boolean text;
+    private TextSequence text;
 
     private TextLoader() {
     }
@@ -136,17 +136,16 @@ public class TextLoader extends Sink {
 
     @Override
     public void handleCharacterData(boolean parsed, Text value) {
-        if (text) {
-            text = false;
-            list.add(value);
+        if (text != null) {
+            text = text.concat(value);
         }
     }
 
     @Override
     public void handleCloseElement(int name) {
-        if (text) {
-            text = false;
-            list.add(Text.EMPTY);
+        if (text != null) {
+            list.add(text.toText());
+            text = null;
         }
     }
 
@@ -159,7 +158,7 @@ public class TextLoader extends Sink {
 
     @Override
     public void handleOpenElement(int name) {
-        text = name == TAG_TEXT;
+        text = name == TAG_TEXT ? Text.EMPTY : null;
     }
 
 }
