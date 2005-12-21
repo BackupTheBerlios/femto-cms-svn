@@ -59,6 +59,7 @@ public class Writer extends FilterOutputStream implements Handler {
 
     public void handleCharacterData(final boolean parsed, final Text value)
             throws IOException {
+        writeClose();
         if (parsed) {
             writeText(value);
         } else {
@@ -119,6 +120,7 @@ public class Writer extends FilterOutputStream implements Handler {
 
     public void handleWhitespace(final boolean comment, final Text value)
             throws IOException {
+        writeClose();
         if (comment) {
             XML_COMMENT1.writeTo(this);
             value.writeTo(this);

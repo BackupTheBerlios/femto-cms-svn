@@ -70,8 +70,8 @@ public class OpenPoolTest extends TestCase {
      */
     public final void testExtern() {
         StringTokenizer tok;
-        int[] ids = new int[4];
-        OpenPool<String> pool = new OpenPool<String>();
+        final int[] ids = new int[4];
+        final OpenPool<String> pool = new OpenPool<String>();
         tok = new StringTokenizer("one\ntwo\nthree\nfour", "\n");
         for (int i = 0; tok.hasMoreTokens(); i++) {
             ids[i] = pool.intern(tok.nextToken());
@@ -87,14 +87,14 @@ public class OpenPoolTest extends TestCase {
      */
     public final void testIntern() {
         StringTokenizer tok;
-        int[] ids = new int[4];
-        OpenPool<String> pool = new OpenPool<String>();
+        final int[] ids = new int[4];
+        final OpenPool<String> pool = new OpenPool<String>();
         tok = new StringTokenizer("one\ntwo\nthree\nfour", "\n");
         for (int i = 0; tok.hasMoreTokens(); i++) {
             ids[i] = pool.intern(tok.nextToken());
         }
-        for (int i = 0; tok.hasMoreTokens(); i++) {
-            for (int j = 3; j > i; j--) {
+        for (int i = 0; i < ids.length; i++) {
+            for (int j = ids.length - 1; j > i; j--) {
                 assertFalse(ids[i] == ids[j]);
             }
         }
