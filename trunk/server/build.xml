@@ -25,7 +25,7 @@
             </fileset>
             <fileset dir="src">
                 <include name="de/mobizcorp/femtocms/**"/>
-                <exclude name="**.java"/>
+                <exclude name="**/*.java"/>
             </fileset>
         </jar>
         <delete file="hui-${version}.jar"/>
@@ -35,7 +35,7 @@
             </fileset>
             <fileset dir="src">
                 <include name="de/mobizcorp/hui/**"/>
-                <exclude name="**.java"/>
+                <exclude name="**/*.java"/>
             </fileset>
         </jar>
         <delete file="qu8ax-${version}.jar"/>
@@ -45,7 +45,7 @@
             </fileset>
             <fileset dir="src">
                 <include name="de/mobizcorp/qu8ax/**"/>
-                <exclude name="**.java"/>
+                <exclude name="**/*.java"/>
             </fileset>
         </jar>
     </target>
