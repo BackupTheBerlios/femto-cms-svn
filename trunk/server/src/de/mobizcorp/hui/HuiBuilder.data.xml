@@ -25,6 +25,9 @@
 	<text>panel</text>
 	<text>passwordfield</text>
 	<text>select</text>
+	<text>tab</text>
+	<text>tabbedpane</text>
+	<text>tabs</text>
 	<text>text</text>
 	<text>textfield</text>
 	<text>textarea</text>

@@ -21,8 +21,11 @@ package de.mobizcorp.hui;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Iterator;
 
 import de.mobizcorp.qu8ax.Text;
+import de.mobizcorp.qu8ax.TextLoader;
 
 /**
  * Container HUI element.
@@ -31,41 +34,37 @@ import de.mobizcorp.qu8ax.Text;
  */
 public class HuiPanel extends HuiNode {
 
-    private static final Text HTML_ELT_CLOSE = Text.constant((byte) '<',
-            (byte) '/', (byte) 't', (byte) 'd', (byte) '>');
+    private static final Text HTML_ELT_CLOSE, HTML_ELT_OPEN1, HTML_ELT_OPEN2,
+            HTML_ELT_OPEN3, HTML_ROW_CLOSE, HTML_ROW_OPEN, HTML_TAB_CLOSE,
+            HTML_TAB_OPEN1, HTML_TAB_OPEN2;
 
-    private static final Text HTML_ELT_OPEN1 = Text.constant((byte) '<',
-            (byte) 't', (byte) 'd', (byte) ' ', (byte) 'c', (byte) 'o',
-            (byte) 'l', (byte) 's', (byte) 'p', (byte) 'a', (byte) 'n',
-            (byte) '=', (byte) '"');
-
-    private static final Text HTML_ELT_OPEN2 = Text.constant((byte) '"',
-            (byte) ' ', (byte) 'r', (byte) 'o', (byte) 'w', (byte) 's',
-            (byte) 'p', (byte) 'a', (byte) 'n', (byte) '=', (byte) '"');
-
-    private static final Text HTML_ELT_OPEN3 = Text.constant((byte) '"',
-            (byte) '>');
-
-    private static final Text HTML_ROW_CLOSE = Text.constant((byte) '<',
-            (byte) '/', (byte) 't', (byte) 'r', (byte) '>', (byte) '\n');
-
-    private static final Text HTML_ROW_OPEN = Text.constant((byte) '<',
-            (byte) 't', (byte) 'r', (byte) '>');
-
-    private static final Text HTML_TAB_CLOSE = Text.constant((byte) '<',
-            (byte) '/', (byte) 't', (byte) 'a', (byte) 'b', (byte) 'l',
-            (byte) 'e', (byte) '>', (byte) '\n');
-
-    private static final Text HTML_TAB_OPEN1 = Text.constant((byte) '<',
-            (byte) 't', (byte) 'a', (byte) 'b', (byte) 'l', (byte) 'e',
-            (byte) ' ', (byte) 'i', (byte) 'd', (byte) '=', (byte) '"');
-
-    private static final Text HTML_TAB_OPEN2 = Text.constant((byte) '"',
-            (byte) '>', (byte) '\n');
+    static {
+        Iterator<Text> list = TextLoader.fromXML(HuiPanel.class);
+        HTML_ELT_CLOSE = list.next();
+        HTML_ELT_OPEN1 = list.next();
+        HTML_ELT_OPEN2 = list.next();
+        HTML_ELT_OPEN3 = list.next();
+        HTML_ROW_CLOSE = list.next();
+        HTML_ROW_OPEN = list.next();
+        HTML_TAB_CLOSE = list.next();
+        HTML_TAB_OPEN1 = list.next();
+        HTML_TAB_OPEN2 = list.next();
+    }
 
     private int cols;
 
     private Text title;
+
+    public HuiPanel() {
+    }
+
+    public HuiPanel(HuiPanel old) throws IllegalArgumentException,
+            SecurityException, InstantiationException, IllegalAccessException,
+            InvocationTargetException, NoSuchMethodException {
+        super(old);
+        this.cols = old.cols;
+        this.title = old.title;
+    }
 
     public int getCols() {
         return cols;
@@ -76,7 +75,7 @@ public class HuiPanel extends HuiNode {
     }
 
     @Override
-    public void loadState(InputStream in) throws IOException {
+    protected void loadState(InputStream in) throws IOException {
         HuiNode scan = getChild();
         while (scan != null) {
             scan.loadState(in);

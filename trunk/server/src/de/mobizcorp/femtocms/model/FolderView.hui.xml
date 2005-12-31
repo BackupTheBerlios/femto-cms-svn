@@ -12,6 +12,29 @@ not implemented -->
 		<button action="cd">Go</button>
 		<label id="filename" text=""/>
 		<bean class="de.mobizcorp.femtocms.model.HuiFolder" id="dir"/>
-		<textarea colspan="2" id="contents" editable="false" rows="32" cols="80"></textarea>
+		<tabs colspan="2">
+		<!-- not yet implemented
+			<tab text="Properties" columns="2">
+				<label text="Name: "/>
+				<label text="-" id="properties.name"/>
+				<label text="Modified: "/>
+				<label text="-" id="properties.modified"/>
+				<label text="Revision: "/>
+				<label text="-" id="properties.modified"/>
+			</tab>
+		not yet implemented -->
+			<tab text="History">
+				<bean class="de.mobizcorp.femtocms.model.HuiHistory" id="history"
+					colspan="2" editable="false" rows="32" cols="80"/>
+			</tab>
+			<tab text="Editor">
+				<bean class="de.mobizcorp.femtocms.model.HuiEditor" id="contents"
+					colspan="2" rows="32" cols="80"/>
+				<panel columns="2">
+					<label text="Revert" action="revert"/>
+					<button text="Save" action="save"/>
+				</panel>
+			</tab>
+		</tabs>
 	</panel>
 </panel>

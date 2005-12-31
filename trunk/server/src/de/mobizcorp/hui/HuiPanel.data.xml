@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<list version="1" xmlns="de.mobizcorp.qu8ax.TextLoader">
+	<text><![CDATA[</td>]]></text>
+	<text><![CDATA[<td colspan="]]></text>
+	<text><![CDATA[" rowspan="]]></text>
+	<text><![CDATA[">]]></text>
+	<text><![CDATA[</tr>
+]]></text>
+	<text><![CDATA[<tr>]]></text>
+	<text><![CDATA[</table>
+]]></text>
+	<text><![CDATA[<table id="]]></text>
+	<text><![CDATA[">
+]]></text>
+</list>

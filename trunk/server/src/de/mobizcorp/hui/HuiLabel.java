@@ -21,8 +21,11 @@ package de.mobizcorp.hui;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Iterator;
 
 import de.mobizcorp.qu8ax.Text;
+import de.mobizcorp.qu8ax.TextLoader;
 
 /**
  * Text label HUI element.
@@ -31,40 +34,79 @@ import de.mobizcorp.qu8ax.Text;
  */
 public class HuiLabel extends HuiNode {
 
-    private static final Text HTML_SPAN_CLOSE = Text.constant((byte) '<',
-            (byte) '/', (byte) 's', (byte) 'p', (byte) 'a', (byte) 'n',
-            (byte) '>', (byte) '\n');
+    private static final Text HTML_SPAN_CLOSE, HTML_SPAN_OPEN1,
+            HTML_SPAN_OPEN2, HTML_LINK_OPEN, HTML_LINK_CLOSE;
 
-    private static final Text HTML_SPAN_OPEN1 = Text.constant((byte) '<',
-            (byte) 's', (byte) 'p', (byte) 'a', (byte) 'n', (byte) ' ',
-            (byte) 'i', (byte) 'd', (byte) '=', (byte) '"');
+    static {
+        Iterator<Text> list = TextLoader.fromXML(HuiLabel.class);
+        HTML_SPAN_CLOSE = list.next();
+        HTML_SPAN_OPEN1 = list.next();
+        HTML_SPAN_OPEN2 = list.next();
+        HTML_LINK_OPEN = list.next();
+        HTML_LINK_CLOSE = list.next();
+    }
 
-    private static final Text HTML_SPAN_OPEN2 = Text.constant((byte) '"',
-            (byte) '>');
+    private Text action;
 
     private Text text;
+
+    public HuiLabel() {
+    }
+
+    public HuiLabel(HuiLabel old) throws IllegalArgumentException,
+            SecurityException, InstantiationException, IllegalAccessException,
+            InvocationTargetException, NoSuchMethodException {
+        super(old);
+        this.action = old.action;
+        this.text = old.text;
+    }
+
+    public Text getAction() {
+        return action;
+    }
 
     public Text getText() {
         return text;
     }
 
     @Override
-    public void loadState(InputStream in) throws IOException {
+    protected void loadState(InputStream in) throws IOException {
         // label has no state
     }
 
     @Override
+    public void post(Text value, ActionHandler handler, Path<HuiNode> path) {
+        if (handler != null) {
+            handler.action(getAction(), path);
+        }
+    }
+
+    @Override
     public void renderNode(OutputStream out) throws IOException {
+        if (action != null) {
+            HTML_LINK_OPEN.writeTo(out);
+            getId().writeTo(out);
+            out.write((byte) '=');
+            renderText(out, getAction());
+            HTML_SPAN_OPEN2.writeTo(out);
+        }
         HTML_SPAN_OPEN1.writeTo(out);
         getId().writeTo(out);
         HTML_SPAN_OPEN2.writeTo(out);
         renderText(out, getText());
         HTML_SPAN_CLOSE.writeTo(out);
+        if (action != null) {
+            HTML_LINK_CLOSE.writeTo(out);
+        }
     }
 
     @Override
     public void saveState(OutputStream out) throws IOException {
         // label has no state
+    }
+
+    public void setAction(Text action) {
+        this.action = action;
     }
 
     public void setText(Text text) {

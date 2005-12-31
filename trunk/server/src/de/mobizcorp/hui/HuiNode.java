@@ -21,10 +21,12 @@ package de.mobizcorp.hui;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
 
 import de.mobizcorp.qu8ax.Resolver;
 import de.mobizcorp.qu8ax.Text;
+import de.mobizcorp.qu8ax.TextInputStream;
 import de.mobizcorp.qu8ax.TextLoader;
 
 /**
@@ -51,25 +53,44 @@ public abstract class HuiNode {
         HTML_DISABLED = list.next();
     }
 
+    public static void saveText(final Text text, final OutputStream out)
+            throws IOException {
+        RFC2279.write(text.size(), out);
+        text.writeTo(out);
+    }
+    
+    public static Text loadText(InputStream in) throws IOException {
+        return Text.valueOf(in, RFC2279.read(in));
+    }
+
+    public static void renderText(final OutputStream out, final InputStream in)
+            throws IOException {
+        int b;
+        while ((b = in.read()) != -1) {
+            switch (b) {
+            case '"':
+                Resolver.ENT_QUOT.writeTo(out);
+                break;
+            case '&':
+                Resolver.ENT_AMP.writeTo(out);
+                break;
+            case '<':
+                Resolver.ENT_LT.writeTo(out);
+                break;
+            case '>':
+                Resolver.ENT_GT.writeTo(out);
+                break;
+            default:
+                out.write(b);
+                break;
+            }
+        }
+    }
+
     public static void renderText(final OutputStream out, final Text text)
             throws IOException {
-        if (text == null) {
-            return;
-        }
-        final int end = text.size();
-        for (int i = 0; i < end; i++) {
-            byte b = text.getByte(i);
-            if (b == 34) {
-                Resolver.ENT_QUOT.writeTo(out);
-            } else if (b == 38) {
-                Resolver.ENT_AMP.writeTo(out);
-            } else if (b == 60) {
-                Resolver.ENT_LT.writeTo(out);
-            } else if (b == 62) {
-                Resolver.ENT_GT.writeTo(out);
-            } else {
-                out.write(b);
-            }
+        if (text != null) {
+            renderText(out, new TextInputStream(text));
         }
     }
 
@@ -85,84 +106,215 @@ public abstract class HuiNode {
 
     private HuiNode sibling;
 
-    public void addChild(final HuiNode child) {
-        if (this == child) {
-            throw new IllegalArgumentException("loop");
-        }
-        HuiNode scan = this.child;
-        if (scan == null) {
-            this.child = child;
-        } else {
-            while (scan.sibling != null) {
-                scan = scan.sibling;
-            }
-            scan.sibling = child;
-        }
-        child.sibling = null; // prevent loops
+    public HuiNode() {
     }
 
+    /**
+     * Copy constructor creating deep copies. Each subclass must implement a
+     * constructor of prototype T(T old).
+     * 
+     * @param old
+     *            node structure to copy.
+     * @throws NoSuchMethodException
+     * @throws InvocationTargetException
+     * @throws IllegalAccessException
+     * @throws InstantiationException
+     * @throws SecurityException
+     * @throws IllegalArgumentException
+     *             when a constructor in the sub-tree fails.
+     */
+    public HuiNode(HuiNode old) throws IllegalArgumentException,
+            SecurityException, InstantiationException, IllegalAccessException,
+            InvocationTargetException, NoSuchMethodException {
+        setColSpan(old.getColSpan());
+        setEnabled(old.isEnabled());
+        setId(old.getId());
+        setRowSpan(old.getRowSpan());
+        HuiNode scan = old.getChild();
+        while (scan != null) {
+            addChild(scan.copy());
+            scan = scan.getSibling();
+        }
+    }
+
+    public HuiNode copy() throws IllegalArgumentException, SecurityException,
+            InstantiationException, IllegalAccessException,
+            InvocationTargetException, NoSuchMethodException {
+        Class<? extends HuiNode> t = getClass();
+        return t.getConstructor(t).newInstance(this);
+    }
+
+    /**
+     * Add a new child to this node.
+     * 
+     * @param child
+     *            a node.
+     * @throws IllegalArgumentException
+     *             if the given node is an ancestor or this.
+     */
+    public void addChild(final HuiNode child) {
+        if (isAncestorOrSelf(child)) {
+            throw new IllegalArgumentException("add ancestor or self");
+        }
+        HuiNode scan = getChild();
+        if (scan == null) {
+            setChild(child);
+        } else {
+            HuiNode next = scan.getSibling();
+            while (next != null) {
+                next = (scan = next).getSibling();
+            }
+            scan.setSibling(child);
+        }
+    }
+
+    private void setSibling(HuiNode sibling) {
+        this.sibling = sibling;
+    }
+
+    private void setChild(HuiNode child) {
+        this.child = child;
+    }
+
+    /**
+     * @return the number of children of this node.
+     */
     public int childCount() {
-        HuiNode scan = child;
         int n = 0;
+        HuiNode scan = getChild();
         while (scan != null) {
             n += 1;
-            scan = scan.sibling;
+            scan = scan.getSibling();
         }
         return n;
     }
 
+    protected void refresh(HuiNode root) {
+        HuiNode scan = getChild();
+        while (scan != null) {
+            scan.refresh(root);
+            scan = scan.getSibling();
+        }
+    }
+
+    /**
+     * Find a node with the given <var>id</var> in the sub-tree starting at
+     * this node.
+     * 
+     * @param id
+     *            an id.
+     * @return the node found, or null.
+     */
     public HuiNode find(final Text id) {
         if (id.equals(getId())) {
             return this;
         }
-        HuiNode scan = child;
+        HuiNode scan = getChild();
         while (scan != null) {
             HuiNode found = scan.find(id);
             if (found != null) {
                 return found;
             }
-            scan = scan.sibling;
+            scan = scan.getSibling();
         }
         return null;
     }
 
-    public HuiNode getChild() {
+    /**
+     * @return the first child of this node, or null.
+     */
+    public final HuiNode getChild() {
         return child;
     }
 
-    public int getColSpan() {
+    /**
+     * @return the number of colums spanned by this node.
+     */
+    public final int getColSpan() {
         return colSpan;
     }
 
-    public Text getId() {
+    /**
+     * @return the id of this node.
+     */
+    public final Text getId() {
         return id;
     }
 
-    public int getRowSpan() {
+    /**
+     * @return the number of rows spanned by this node.
+     */
+    public final int getRowSpan() {
         return rowSpan;
     }
 
-    public HuiNode getSibling() {
+    /**
+     * @return the next sibling of this node.
+     */
+    public final HuiNode getSibling() {
         return sibling;
     }
 
-    public boolean isEnabled() {
+    /**
+     * Answer true if the given <var>parent</var> is an ancestor, or this.
+     * 
+     * @param node
+     *            a node.
+     * @return true iff the node is an ancestor or this.
+     */
+    public final boolean isAncestorOrSelf(final HuiNode node) {
+        if (this == node) {
+            return true;
+        }
+        HuiNode scan = node.getChild();
+        while (scan != null) {
+            if (isAncestorOrSelf(scan)) {
+                return true;
+            } else {
+                scan = scan.getSibling();
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @return true iff this node is enabled for user interaction.
+     */
+    public final boolean isEnabled() {
         return enabled;
     }
 
-    public abstract void loadState(InputStream in) throws IOException;
+    /**
+     * Load the node state from the given input stream.
+     * 
+     * @param in
+     *            an input stream.
+     * @throws IOException
+     *             propagated from I/O.
+     */
+    protected abstract void loadState(InputStream in) throws IOException;
+    
+    public void readState(InputStream in) throws IOException {
+        loadState(in);
+        refresh(this);
+    }
 
+    /**
+     * @param id
+     *            a node id.
+     * @return the path from this node to the node with the given id, or null.
+     */
     public Path<HuiNode> path(final Text id) {
         if (id.equals(getId())) {
             return new Path<HuiNode>(this, null);
         }
-        HuiNode scan = child;
+        HuiNode scan = getChild();
         while (scan != null) {
             Path<HuiNode> found = scan.path(id);
             if (found != null) {
                 return new Path<HuiNode>(this, found);
             }
-            scan = scan.sibling;
+            scan = scan.getSibling();
         }
         return null;
     }
@@ -171,35 +323,62 @@ public abstract class HuiNode {
         // no effect by default
     }
 
+    /**
+     * Remove all children from this node.
+     */
     public void removeAll() {
-        HuiNode scan = child;
-        child = null;
+        HuiNode scan = getChild();
+        setChild(null);
         while (scan != null) {
-            HuiNode next = scan.sibling;
-            scan.sibling = null;
+            HuiNode next = scan.getSibling();
+            scan.setSibling(null);
             scan = next;
         }
     }
 
+    /**
+     * Remove the given child from this node. This method does nothing if
+     * <var>child</var> is not a direct child of this node.
+     * 
+     * @param child
+     *            a child of this node.
+     */
     public void removeChild(HuiNode child) {
-        HuiNode scan = this.child;
+        HuiNode scan = getChild();
         if (scan == child) {
-            this.child = child.sibling;
-            child.sibling = null;
+            setChild(child.getSibling());
+            child.setSibling(null);
             return;
         }
         while (scan != null) {
-            if (scan.sibling == child) {
-                scan.sibling = child.sibling;
-                child.sibling = null;
+            if (scan.getSibling() == child) {
+                scan.setSibling(child.getSibling());
+                child.setSibling(null);
                 break;
             }
-            scan = scan.sibling;
+            scan = scan.getSibling();
         }
     }
 
+    /**
+     * Render this node to the output stream.
+     * 
+     * @param out
+     *            an output stream.
+     * @throws IOException
+     *             propagated from I/O.
+     */
     public abstract void renderNode(OutputStream out) throws IOException;
 
+    /**
+     * Render a HTML page with the tree starting at this node to the given
+     * output stream.
+     * 
+     * @param out
+     *            an output stream.
+     * @throws IOException
+     *             propagated from I/O.
+     */
     public void renderPage(OutputStream out) throws IOException {
         HTML_PAGE1.writeTo(out);
         if (this instanceof HuiPanel) {
@@ -213,9 +392,18 @@ public abstract class HuiNode {
         HTML_PAGE3.writeTo(out);
     }
 
+    /**
+     * Render the tree starting at this node to the given output stream.
+     * 
+     * @param out
+     *            an output stream.
+     * @throws IOException
+     *             propagated from I/O.
+     */
     public void renderTree(OutputStream out) throws IOException {
         HTML_FORM1.writeTo(out);
         StateCodec codec = new StateCodec(out);
+        refresh(this);
         saveState(codec);
         codec.flush();
         HTML_FORM2.writeTo(out);
@@ -223,25 +411,59 @@ public abstract class HuiNode {
         HTML_FORM3.writeTo(out);
     }
 
+    /**
+     * Save the current state to the given output stream.
+     * 
+     * @param out
+     *            an output stream.
+     * @throws IOException
+     *             propagated from I/O.
+     */
     public abstract void saveState(OutputStream out) throws IOException;
 
-    public void setColSpan(int colSpan) {
+    /**
+     * @param colSpan
+     *            the number of columns to span by this node.
+     */
+    public final void setColSpan(int colSpan) {
         this.colSpan = colSpan;
     }
 
-    public void setEnabled(boolean enabled) {
+    /**
+     * @param enabled
+     *            true iff this node should be enabled for user interaction.
+     */
+    public final void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
 
-    public void setId(Text id) {
+    /**
+     * @param id
+     *            the id for this node, should be unique in a tree (unchecked).
+     */
+    public final void setId(Text id) {
         this.id = id;
     }
 
-    public void setRowSpan(int rowSpan) {
+    /**
+     * @param rowSpan
+     *            the number of rows to span by this node.
+     */
+    public final void setRowSpan(int rowSpan) {
         this.rowSpan = rowSpan;
     }
 
+    /**
+     * Write the state of the sub-tree starting at this node to the output
+     * stream, encoded as base64.
+     * 
+     * @param out
+     *            an output stream.
+     * @throws IOException
+     *             propagated from I/O.
+     */
     public void writeState(OutputStream out) throws IOException {
+        refresh(this);
         out.write('/');
         StateCodec codec = new StateCodec(out);
         saveState(codec);

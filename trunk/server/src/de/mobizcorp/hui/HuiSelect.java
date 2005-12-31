@@ -21,6 +21,7 @@ package de.mobizcorp.hui;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -54,6 +55,17 @@ public class HuiSelect extends HuiNode {
 
     private int selected;
 
+    public HuiSelect() {
+    }
+
+    public HuiSelect(HuiSelect old) throws IllegalArgumentException,
+            SecurityException, InstantiationException, IllegalAccessException,
+            InvocationTargetException, NoSuchMethodException {
+        super(old);
+        this.options.addAll(old.options);
+        this.selected = old.selected;
+    }
+
     public void addOption(Text value) {
         options.add(value);
     }
@@ -71,7 +83,7 @@ public class HuiSelect extends HuiNode {
     }
 
     @Override
-    public void loadState(InputStream in) throws IOException {
+    protected void loadState(InputStream in) throws IOException {
         setSelected(RFC2279.read(in));
     }
 

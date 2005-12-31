@@ -21,7 +21,6 @@ package de.mobizcorp.hui;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -41,27 +40,20 @@ import de.mobizcorp.qu8ax.TextParser;
  */
 public class MiniServer extends Thread {
 
-    private static final Text HTTP_CONTENT_LENGTH = Text.constant((byte) 'C',
-            (byte) 'o', (byte) 'n', (byte) 't', (byte) 'e', (byte) 'n',
-            (byte) 't', (byte) '-', (byte) 'L', (byte) 'e', (byte) 'n',
-            (byte) 'g', (byte) 't', (byte) 'h');
+    private static final Text HTTP_CONTENT_LENGTH = Text
+            .valueOf("Content-Length");
 
-    private static final Text HTTP_GET = Text.constant((byte) 'G', (byte) 'E',
-            (byte) 'T');
+    private static final Text HTTP_GET = Text.constant(new byte[] { 'G', 'E',
+            'T' });
 
-    private static final Text HTTP_POST = Text.constant((byte) 'P', (byte) 'O',
-            (byte) 'S', (byte) 'T');
+    private static final Text HTTP_POST = Text.constant(new byte[] { 'P', 'O',
+            'S', 'T' });
 
-    private static final Text HTTP_REDIRECT1 = Text.constant((byte) 'H',
-            (byte) 'T', (byte) 'T', (byte) 'P', (byte) '/', (byte) '1',
-            (byte) '.', (byte) '0', (byte) ' ', (byte) '3', (byte) '0',
-            (byte) '2', (byte) ' ', (byte) 'F', (byte) 'o', (byte) 'u',
-            (byte) 'n', (byte) 'd', (byte) '\r', (byte) '\n', (byte) 'L',
-            (byte) 'o', (byte) 'c', (byte) 'a', (byte) 't', (byte) 'i',
-            (byte) 'o', (byte) 'n', (byte) ':', (byte) ' ');
+    private static final Text HTTP_REDIRECT1 = Text
+            .valueOf("HTTP/1.0 302 Found\r\nLocation: ");
 
-    private static final Text HTTP_REDIRECT2 = Text.constant((byte) '\r',
-            (byte) '\n', (byte) '\r', (byte) '\n');
+    private static final Text HTTP_REDIRECT2 = Text.constant(new byte[] { '\r',
+            '\n', '\r', '\n' });
 
     private static final Text HTTP_RESPONSE_200, HTTP_RESPONSE_404;
 
@@ -73,26 +65,20 @@ public class MiniServer extends Thread {
 
     public static void main(String args[]) {
         try {
-            final FileInputStream in = new FileInputStream(args[0]);
-            try {
-                final ActionHandler handler;
-                if (args.length > 1) {
-                    handler = (ActionHandler) Class.forName(args[1])
-                            .newInstance();
-                } else {
-                    handler = null;
-                }
-                final int port;
-                if (args.length > 2) {
-                    port = Integer.parseInt(args[2]);
-                } else {
-                    port = 4556;
-                }
-                new MiniServer(HuiBuilder.build(in), handler, new ServerSocket(
-                        port)).start();
-            } finally {
-                in.close();
+            final ActionHandler handler;
+            if (args.length > 1) {
+                handler = (ActionHandler) Class.forName(args[1]).newInstance();
+            } else {
+                handler = null;
             }
+            final int port;
+            if (args.length > 2) {
+                port = Integer.parseInt(args[2]);
+            } else {
+                port = 4556;
+            }
+            new MiniServer(new HuiSource(args[0]), handler, new ServerSocket(
+                    port)).start();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -125,13 +111,13 @@ public class MiniServer extends Thread {
 
     private final ServerSocket endpoint;
 
-    private final HuiNode model;
+    private final HuiSource source;
 
     private final ActionHandler handler;
 
-    public MiniServer(HuiNode model, ActionHandler handler,
+    public MiniServer(HuiSource source, ActionHandler handler,
             ServerSocket endpoint) {
-        this.model = model;
+        this.source = source;
         this.handler = handler;
         this.endpoint = endpoint;
         // setDaemon(true);
@@ -199,10 +185,11 @@ public class MiniServer extends Thread {
                     return;
                 }
             }
+            HuiNode model = source.instance();
             if (slash != -1 && slash < url.size() - 1) {
                 byte[] state = StateCodec.fromBase64(url.part(slash + 1,
                         url.size() - slash - 1).toBytes());
-                model.loadState(new ByteArrayInputStream(state));
+                model.readState(new ByteArrayInputStream(state));
             }
             if (query != null) {
                 TextParser tp = new TextParser(query, Text.constant((byte) '&'));

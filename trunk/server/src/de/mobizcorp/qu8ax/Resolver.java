@@ -28,29 +28,29 @@ import java.io.InputStream;
  */
 public class Resolver {
 
-    public static final Text ENT_AMP = Text.constant((byte) '&', (byte) 'a',
-            (byte) 'm', (byte) 'p', (byte) ';');
+    public static final Text ENT_AMP = Text.constant(new byte[] { '&', 'a',
+            'm', 'p', ';' });
 
-    public static final Text ENT_GT = Text.constant((byte) '&', (byte) 'g',
-            (byte) 't', (byte) ';');
+    public static final Text ENT_GT = Text.constant(new byte[] { '&', 'g', 't',
+            ';' });
 
-    public static final Text ENT_LT = Text.constant((byte) '&', (byte) 'l',
-            (byte) 't', (byte) ';');
+    public static final Text ENT_LT = Text.constant(new byte[] { '&', 'l', 't',
+            ';' });
 
-    public static final Text ENT_QUOT = Text.constant((byte) '&', (byte) 'q',
-            (byte) 'u', (byte) 'o', (byte) 't', (byte) ';');
+    public static final Text ENT_QUOT = Text.constant(new byte[] { '&', 'q',
+            'u', 'o', 't', ';' });
 
     public static final Resolver INSTANCE = new Resolver();
 
-    public static final Text NAME_AMP = Text.constant((byte) 'a', (byte) 'm',
-            (byte) 'p');
+    public static final Text NAME_AMP = Text.constant(new byte[] { 'a', 'm',
+            'p' });
 
-    public static final Text NAME_GT = Text.constant((byte) 'g', (byte) 't');
+    public static final Text NAME_GT = Text.constant(new byte[] { 'g', 't' });
 
-    public static final Text NAME_LT = Text.constant((byte) 'l', (byte) 't');
+    public static final Text NAME_LT = Text.constant(new byte[] { 'l', 't' });
 
-    public static final Text NAME_QUOT = Text.constant((byte) 'q', (byte) 'u',
-            (byte) 'o', (byte) 't');
+    public static final Text NAME_QUOT = Text.constant(new byte[] { 'q', 'u',
+            'o', 't' });
 
     public static final Text VAL_AMP = Text.constant((byte) '&');
 

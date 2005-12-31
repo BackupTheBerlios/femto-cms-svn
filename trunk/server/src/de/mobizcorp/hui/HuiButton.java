@@ -20,6 +20,7 @@ package de.mobizcorp.hui;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
 
 import de.mobizcorp.qu8ax.Text;
@@ -33,7 +34,7 @@ import de.mobizcorp.qu8ax.TextLoader;
 public class HuiButton extends HuiLabel {
 
     private static final Text HTML_BUTTON1, HTML_BUTTON2, HTML_BUTTON3,
-            HTML_BUTTON4, HTML_BUTTON5;
+            HTML_BUTTON4;
 
     static {
         Iterator<Text> list = TextLoader.fromXML(HuiButton.class);
@@ -41,20 +42,15 @@ public class HuiButton extends HuiLabel {
         HTML_BUTTON2 = list.next();
         HTML_BUTTON3 = list.next();
         HTML_BUTTON4 = list.next();
-        HTML_BUTTON5 = list.next();
     }
 
-    private Text action;
-
-    public Text getAction() {
-        return action;
+    public HuiButton() {
     }
 
-    @Override
-    public void post(Text value, ActionHandler handler, Path<HuiNode> path) {
-        if (handler != null) {
-            handler.action(getAction(), path);
-        }
+    public HuiButton(HuiButton old) throws IllegalArgumentException,
+            SecurityException, InstantiationException, IllegalAccessException,
+            InvocationTargetException, NoSuchMethodException {
+        super(old);
     }
 
     @Override
@@ -63,20 +59,12 @@ public class HuiButton extends HuiLabel {
         getId().writeTo(out);
         HTML_BUTTON2.writeTo(out);
         getId().writeTo(out);
-        if (getAction() != null) {
-            HTML_BUTTON3.writeTo(out);
-            getAction().writeTo(out);
-        }
+        HTML_BUTTON3.writeTo(out);
+        renderText(out, getText());
         if (!isEnabled()) {
             HTML_DISABLED.writeTo(out);
         }
         HTML_BUTTON4.writeTo(out);
-        renderText(out, getText());
-        HTML_BUTTON5.writeTo(out);
-    }
-
-    public void setAction(Text action) {
-        this.action = action;
     }
 
 }

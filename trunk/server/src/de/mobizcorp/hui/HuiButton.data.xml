@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <list version="1" xmlns="de.mobizcorp.qu8ax.TextLoader">
-	<text><![CDATA[<button id="]]></text>
+	<text><![CDATA[<input id="]]></text>
 	<text><![CDATA[" name="]]></text>
 	<text><![CDATA[" value="]]></text>
-	<text><![CDATA[" type="submit">]]></text>
-	<text><![CDATA[</button>
+	<text><![CDATA[" class="button" type="submit"></input>
 ]]></text>
 </list>

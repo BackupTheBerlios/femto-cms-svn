@@ -33,12 +33,11 @@ public final class Text implements TextSequence {
 
     public static final Text EMPTY = constant();
 
-    public static final Text TRUE = constant((byte) 't', (byte) 'r',
-            (byte) 'u', (byte) 'e');
-
     public static final int MAX_RADIX = 36;
 
     public static final int MIN_RADIX = 2;
+
+    public static final Text TRUE = constant(new byte[] { 't', 'r', 'u', 'e' });
 
     public static Text constant(byte... data) {
         return new Text(data, 0, data.length);
@@ -92,6 +91,10 @@ public final class Text implements TextSequence {
         if (pos >= off + len) {
             b.append("pos=").append(pos);
         }
+    }
+
+    public static final boolean equals(Text a, Text b) {
+        return a == b || (a != null && a.equals(b));
     }
 
     public static final int length(byte[] data, int off, int len) {
@@ -175,8 +178,8 @@ public final class Text implements TextSequence {
         return new Text(buffer, 0, buffer.length);
     }
 
-    public static Text valueOf(String str) {
-        return new Text(str);
+    public static Text valueOf(Object o) {
+        return new Text(String.valueOf(o));
     }
 
     private final byte[] data;

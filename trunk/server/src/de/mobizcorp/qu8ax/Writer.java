@@ -17,7 +17,7 @@ public class Writer extends FilterOutputStream implements Handler {
         Iterator<Text> list = TextLoader.fromXML(Writer.class);
         XML_DECL = list.next();
         XML_CDATA1 = list.next();
-        XML_CDATA2 = Text.constant((byte) ']', (byte) ']', (byte) '>');
+        XML_CDATA2 = Text.constant(new byte[] { ']', ']', '>' });
         XML_XMLNS_ = list.next();
         XML_COMMENT1 = list.next();
         XML_COMMENT2 = list.next();

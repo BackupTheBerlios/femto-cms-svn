@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<list version="1" xmlns="de.mobizcorp.qu8ax.TextLoader">
+	<text><![CDATA[<a class="tab" href="?]]></text>
+	<text><![CDATA["><span class="tab">]]></text>
+	<text><![CDATA["><span class="tab tabo">]]></text>
+	<text><![CDATA[</span></a>]]></text>
+	<text><![CDATA[<div class="tabs"><div class="tablist">]]></text>
+	<text><![CDATA[</div><div class="tabbody">]]></text>
+	<text><![CDATA[</div></div>
+]]></text>
+</list>

@@ -152,8 +152,8 @@ public class TextLoader extends Sink {
     @Override
     public void handleOpenDocument(NamePool<Text> l, NamePool<NamePair> q) {
         final int uri = l.intern(Text.valueOf(TextLoader.class.getName()));
-        this.TAG_TEXT = Parser.nameFor(uri, Text.constant((byte) 't',
-                (byte) 'e', (byte) 'x', (byte) 't'), q, l);
+        this.TAG_TEXT = Parser.nameFor(uri, Text.constant(new byte[] { 't',
+                'e', 'x', 't' }), q, l);
     }
 
     @Override

@@ -34,6 +34,17 @@ public class RFC2279 {
         // library class
     }
 
+    /**
+     * Write the unicode code point <var>n</var> encoded as RFC2279 UTF-8 to
+     * <var>out</var>.
+     * 
+     * @param n
+     *            unicode character, 0 <= n <= Integer.MAX_VALUE.
+     * @param out
+     *            an output stream.
+     * @throws IOException
+     *             propagated from I/O.
+     */
     public static void write(final int n, final OutputStream out)
             throws IOException {
         if (n < 0) {
@@ -74,6 +85,16 @@ public class RFC2279 {
         }
     }
 
+    /**
+     * Read the next unicode code point from <var>in</var>, encoded as RFC2279
+     * UTF-8.
+     * 
+     * @param in
+     *            an input stream.
+     * @return the unicode character.
+     * @throws IOException
+     *             propagated from I/O.
+     */
     public static int read(final InputStream in) throws IOException {
         int b = in.read() & 0xff, n;
         if (b <= 0x7f) {

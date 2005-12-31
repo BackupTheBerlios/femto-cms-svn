@@ -4,11 +4,11 @@
 	<text><![CDATA[">
 <style type="text/css">
 #dir { height: 44em; width: 16em; overflow: scroll; }
-#dir div { width: 100%; border-bottom: 1px solid grey; }
-#dir button { text-align: left; border: none; }
+#dir div { width: 100%; background: rgb(240,240,240); margin: 1px; }
+#dir .button { text-align: left; border: none; }
 #location { width: 100%; }
 #filename { font-size: 80%; align: right; }
-.folder button { font-weight: bold; }
+.folder .button { font-weight: bold; }
 </style>
 ]]></text>
 	<text><![CDATA[<div>]]></text>
@@ -19,9 +19,11 @@
 	<text>..</text>
 	<text>cd</text>
 	<text>open</text>
+	<text>save</text>
 	<!-- ids -->
 	<text>contents</text>
 	<text>dir</text>
 	<text>filename</text>
+	<text>history</text>
 	<text>location</text>
 </list>

@@ -1,5 +1,5 @@
 <project name="femtocms" default="help">
-    <property name="version" value="0.3"/>
+    <property name="version" value="0.4"/>
     <path id="jars">
         <fileset dir="jar" includes="*.jar"/>
     </path>
@@ -20,8 +20,33 @@
     <target name="jar" depends="compile">
         <delete file="femtocms-${version}.jar"/>
         <jar jarfile="femtocms-${version}.jar">
-            <fileset dir="tmp"/>
-            <fileset dir="src" excludes="*.java"/>
+            <fileset dir="tmp">
+                <include name="de/mobizcorp/femtocms/**"/>
+            </fileset>
+            <fileset dir="src">
+                <include name="de/mobizcorp/femtocms/**"/>
+                <exclude name="**.java"/>
+            </fileset>
+        </jar>
+        <delete file="hui-${version}.jar"/>
+        <jar jarfile="hui-${version}.jar">
+            <fileset dir="tmp">
+                <include name="de/mobizcorp/hui/**"/>
+            </fileset>
+            <fileset dir="src">
+                <include name="de/mobizcorp/hui/**"/>
+                <exclude name="**.java"/>
+            </fileset>
+        </jar>
+        <delete file="qu8ax-${version}.jar"/>
+        <jar jarfile="qu8ax-${version}.jar">
+            <fileset dir="tmp">
+                <include name="de/mobizcorp/qu8ax/**"/>
+            </fileset>
+            <fileset dir="src">
+                <include name="de/mobizcorp/qu8ax/**"/>
+                <exclude name="**.java"/>
+            </fileset>
         </jar>
     </target>
     <target name="bundle" depends="clean,jar">

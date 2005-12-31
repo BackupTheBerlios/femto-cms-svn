@@ -19,23 +19,20 @@
 package de.mobizcorp.femtocms.model;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 
 import de.mobizcorp.hui.ActionHandler;
 import de.mobizcorp.hui.HuiBuilder;
-import de.mobizcorp.hui.HuiButton;
 import de.mobizcorp.hui.HuiLabel;
 import de.mobizcorp.hui.HuiNode;
 import de.mobizcorp.hui.HuiSelect;
-import de.mobizcorp.hui.HuiText;
 import de.mobizcorp.hui.Path;
-import de.mobizcorp.hui.RFC2279;
 import de.mobizcorp.qu8ax.Text;
 import de.mobizcorp.qu8ax.TextBuffer;
 import de.mobizcorp.qu8ax.TextLoader;
@@ -49,12 +46,15 @@ import de.mobizcorp.qu8ax.TextParser;
 public class HuiFolder extends HuiNode implements ActionHandler,
         Comparator<File> {
 
+    private static final Text ACTION___, ACTION_CD, ACTION_OPEN, ACTION_SAVE;
+
     private static final Text HTML_DIV11, HTML_DIV12, HTML_DIV13, HTML_DIV2,
             HTML_DIV3;
 
-    private static final Text ACTION___, ACTION_CD, ACTION_OPEN;
+    private static final Text ID_CONTENTS, ID_DIR, ID_FILENAME, ID_HISTORY, ID_LOCATION;
 
-    private static final Text ID_CONTENTS, ID_DIR, ID_FILENAME, ID_LOCATION;
+    private static final Text PATH_SEPARATOR = Text.constant((byte) '/',
+            (byte) '\\');
 
     static {
         Iterator<Text> list = TextLoader.fromXML(HuiFolder.class);
@@ -66,34 +66,172 @@ public class HuiFolder extends HuiNode implements ActionHandler,
         ACTION___ = list.next();
         ACTION_CD = list.next();
         ACTION_OPEN = list.next();
+        ACTION_SAVE = list.next();
         ID_CONTENTS = list.next();
         ID_DIR = list.next();
         ID_FILENAME = list.next();
+        ID_HISTORY = list.next();
         ID_LOCATION = list.next();
     }
 
+    private transient boolean dirty = true;
+
+    private Text file = Text.EMPTY;
+
     private Text path = Text.valueOf(System.getProperty("user.dir", "."));
 
-    @Override
-    public void saveState(OutputStream out) throws IOException {
-        RFC2279.write(path.size(), out);
-        path.writeTo(out);
+    public HuiFolder() {
+    }
+
+    public HuiFolder(final HuiFolder old) throws IllegalArgumentException,
+            SecurityException, InstantiationException, IllegalAccessException,
+            InvocationTargetException, NoSuchMethodException {
+        super(old);
+        this.path = old.path;
+        setDirty(old.isDirty());
+    }
+
+    public void action(final Text name, final Path<HuiNode> path) {
+        final HuiNode context = path.getLast();
+        System.out.println("action: '" + name + "' on '" + context.getId()
+                + "'");
+        if (name.equals(ACTION_OPEN)) {
+            final HuiFolder self = (HuiFolder) path.getParent(context);
+            final File current = new File(self.path.toString());
+            final Text elem = ((HuiLabel) context).getText();
+            if (elem.equals(ACTION___)) {
+                final File parent = current.getParentFile();
+                if (parent != null) {
+                    self.setPath(Text.valueOf(parent.getPath()));
+                }
+            } else {
+                final File file = new File(current, elem.toString());
+                if (file.isDirectory()) {
+                    self.setPath(Text.valueOf(file.getPath()));
+                } else {
+                    self.setFile(elem);
+                }
+            }
+        } else if (name.equals(ACTION_CD)) {
+            final HuiSelect select = (HuiSelect) path.getNode().find(
+                    ID_LOCATION);
+            final HuiFolder self = (HuiFolder) path.getNode().find(ID_DIR);
+            final int end = select.getSelected();
+            final TextBuffer buffer = new TextBuffer();
+            for (int i = 0; i <= end; i++) {
+                if (i > 0) {
+                    buffer.append((byte) File.separatorChar);
+                }
+                buffer.append(select.getOption(i));
+            }
+            self.setPath(buffer.toText());
+        } else if (name.equals(ACTION_SAVE)) {
+            final HuiEditor editor = (HuiEditor) path.getNode().find(
+                    ID_CONTENTS);
+            editor.saveValue();
+        }
+    }
+
+    private void addLink(final Text name, final boolean folder) {
+        final HuiLabel link = new HuiLabel();
+        link.setId(new TextBuffer().append(getId()).append(
+                HuiBuilder.ID_SEPARATOR).append(
+                Text.valueOf(childCount(), Text.MAX_RADIX)).toText());
+        link.setText(name);
+        link.setAction(ACTION_OPEN);
+        link.setColSpan(folder ? 2 : 1); // TODO: cheap workaround
+        addChild(link);
+    }
+
+    public int compare(final File o1, final File o2) {
+        if (o1.isDirectory() != o2.isDirectory()) {
+            return o1.isDirectory() ? -1 : 1;
+        } else {
+            return o1.getName().compareToIgnoreCase(o2.getName());
+        }
+    }
+
+    /**
+     * @return Returns the file.
+     */
+    private Text getFile() {
+        return file;
+    }
+
+    private final Text getPath() {
+        return path;
+    }
+
+    private final boolean isDirty() {
+        return dirty;
     }
 
     @Override
-    public void loadState(InputStream in) throws IOException {
-        final Text newPath = Text.valueOf(in, RFC2279.read(in));
-        if (!path.equals(newPath)) {
-            path = newPath;
-            refresh();
+    protected void loadState(final InputStream in) throws IOException {
+        setPath(loadText(in));
+        setFile(loadText(in));
+    }
+
+    @Override
+    protected void refresh(final HuiNode root) {
+        if (isDirty()) {
+            setDirty(false);
+            refreshList();
+            refreshPath(root);
+            refreshEditor(root);
+            refreshHistory(root);
+        }
+        super.refresh(root);
+    }
+
+    private void refreshHistory(HuiNode root) {
+        final HuiHistory history = (HuiHistory) root.find(ID_HISTORY);
+        history.setFolder(getPath());
+        history.setFile(getFile());
+    }
+
+    private void refreshEditor(final HuiNode root) {
+        final Text fileName = file.size() == 0 ? Text.EMPTY : Text
+                .valueOf(new File(path.toString(), file.toString()).getPath());
+        final HuiEditor editor = (HuiEditor) root.find(ID_CONTENTS);
+        final HuiLabel label = (HuiLabel) root.find(ID_FILENAME);
+        editor.setCurrent(fileName);
+        label.setText(fileName);
+    }
+
+    private void refreshList() {
+        removeAll();
+        final File dir = new File(path.toString());
+        if (dir.exists() && dir.isDirectory()) {
+            addLink(ACTION___, true);
+            final File[] files = sort(dir.listFiles());
+            for (int i = 0; i < files.length; i++) {
+                final File file = files[i];
+                final Text name = Text.valueOf(file.getName());
+                if (name.indexOf('.') != 0) {
+                    addLink(name, file.isDirectory());
+                }
+            }
+        }
+    }
+
+    private void refreshPath(final HuiNode root) {
+        final HuiNode node = root.find(ID_LOCATION);
+        if (node instanceof HuiSelect) {
+            final HuiSelect select = (HuiSelect) node;
+            select.clear();
+            int count = -1;
+            final TextParser tp = new TextParser(getPath(), PATH_SEPARATOR);
+            while (tp.hasNext()) {
+                select.addOption(tp.next());
+                count += 1;
+            }
+            select.setSelected(count);
         }
     }
 
     @Override
     public void renderNode(OutputStream out) throws IOException {
-        if (getChild() == null) {
-            refresh();
-        }
         HTML_DIV11.writeTo(out);
         getId().writeTo(out);
         HTML_DIV2.writeTo(out);
@@ -107,19 +245,32 @@ public class HuiFolder extends HuiNode implements ActionHandler,
         HTML_DIV3.writeTo(out);
     }
 
-    private void refresh() {
-        removeAll();
-        File dir = new File(path.toString());
-        if (dir.exists() && dir.isDirectory()) {
-            addButton(ACTION___, true);
-            final File[] files = sort(dir.listFiles());
-            for (int i = 0; i < files.length; i++) {
-                final File file = files[i];
-                final Text name = Text.valueOf(file.getName());
-                if (name.indexOf('.') != 0) {
-                    addButton(name, file.isDirectory());
-                }
-            }
+    @Override
+    public void saveState(OutputStream out) throws IOException {
+        saveText(getPath(), out);
+        saveText(getFile(), out);
+    }
+
+    private final void setDirty(boolean dirty) {
+        this.dirty = dirty;
+    }
+
+    /**
+     * @param file
+     *            The file to set.
+     */
+    private void setFile(Text file) {
+        if (!Text.equals(file, this.file)) {
+            this.file = file;
+            setDirty(true);
+        }
+    }
+
+    private final void setPath(Text path) {
+        if (!Text.equals(path, this.path)) {
+            setFile(Text.EMPTY);
+            this.path = path;
+            setDirty(true);
         }
     }
 
@@ -128,92 +279,5 @@ public class HuiFolder extends HuiNode implements ActionHandler,
             Arrays.sort(files, this);
         }
         return files;
-    }
-
-    private void addButton(final Text name, boolean folder) {
-        final HuiButton button = new HuiButton();
-        button.setId(new TextBuffer().append(getId()).append(
-                HuiBuilder.ID_SEPARATOR).append(
-                Text.valueOf(childCount(), Text.MAX_RADIX)).toText());
-        button.setText(name);
-        button.setAction(ACTION_OPEN);
-        button.setColSpan(folder ? 2 : 1); // TODO: cheap workaround
-        addChild(button);
-    }
-
-    private void setPath(Text newPath, Path<HuiNode> context) {
-        this.path = newPath;
-        refresh();
-        HuiNode node = context.getNode().find(ID_LOCATION);
-        if (node instanceof HuiSelect) {
-            HuiSelect select = (HuiSelect) node;
-            select.clear();
-            int count = -1;
-            TextParser tp = new TextParser(newPath, Text.constant((byte) '/',
-                    (byte) '\\'));
-            while (tp.hasNext()) {
-                select.addOption(tp.next());
-                count += 1;
-            }
-            select.setSelected(count);
-        }
-    }
-
-    public void action(final Text name, final Path<HuiNode> path) {
-        HuiNode context = path.getLast();
-        System.out.println("action: '" + name + "' on '" + context.getId()
-                + "'");
-        if (name.equals(ACTION_OPEN)) {
-            HuiFolder self = (HuiFolder) path.getParent(context);
-            File current = new File(self.path.toString());
-            final Text elem = ((HuiButton) context).getText();
-            if (elem.equals(ACTION___)) {
-                File parent = current.getParentFile();
-                if (parent != null) {
-                    self.setPath(Text.valueOf(parent.getPath()), path);
-                }
-            } else {
-                File file = new File(current, elem.toString());
-                if (file.isDirectory()) {
-                    self.setPath(Text.valueOf(file.getPath()), path);
-                } else {
-                    HuiText text = (HuiText) path.getNode().find(ID_CONTENTS);
-                    HuiLabel label = (HuiLabel) path.getNode()
-                            .find(ID_FILENAME);
-                    try {
-                        final FileInputStream in = new FileInputStream(file);
-                        try {
-                            text.setValue(TextBuffer.valueOf(in).toText());
-                            label.setText(Text.valueOf(file.getPath()));
-                        } finally {
-                            in.close();
-                        }
-                    } catch (IOException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-                }
-            }
-        } else if (name.equals(ACTION_CD)) {
-            HuiSelect select = (HuiSelect) path.getNode().find(ID_LOCATION);
-            HuiFolder self = (HuiFolder) path.getNode().find(ID_DIR);
-            final int end = select.getSelected();
-            TextBuffer buffer = new TextBuffer();
-            for (int i = 0; i <= end; i++) {
-                if (i > 0) {
-                    buffer.append((byte) File.separatorChar);
-                }
-                buffer.append(select.getOption(i));
-            }
-            self.setPath(buffer.toText(), path);
-        }
-    }
-
-    public int compare(File o1, File o2) {
-        if (o1.isDirectory() != o2.isDirectory()) {
-            return o1.isDirectory() ? -1 : 1;
-        } else {
-            return o1.getName().compareToIgnoreCase(o2.getName());
-        }
     }
 }

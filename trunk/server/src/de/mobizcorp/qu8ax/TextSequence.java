@@ -28,82 +28,91 @@ import java.io.OutputStream;
  */
 public interface TextSequence {
 
-	/**
-	 * Create an iterator over this sequence.
-	 * 
-	 * @return the iterator.
-	 */
-	public TextIterator iterator();
-
-	/**
-	 * Answer the length of this text sequence in Unicode character points. Note
-	 * that this may <em>not</em> be equal to toString().length() because Java
-	 * characters are only UCS-2 and may require two characters to represenent
-	 * one Unicode code point.
-	 * 
-	 * @return the number of characters in this text.
-	 */
-	public int length();
-
-	/**
-	 * Return a subsequence of this starting at <var>off</var>, with <var>len</var>
-	 * octets.
-	 * 
-	 * @param off
-	 *            start index in octets.
-	 * @param len
-	 *            size of result in octets.
-	 * @return partial text sequence.
-	 */
-	public Text part(int off, int len);
-
-	/**
-	 * Answer the size of this text sequence in octets.
-	 * 
-	 * @return the size, in encoded bytes.
-	 */
-	public int size();
-
-	/**
-	 * Convert this text sequence to a standard Java String.
-	 * 
-	 * @return this text as a string.
-	 */
-	public String toString();
-
-	/**
-	 * Convert this text sequence to an immutable Text.
-	 * 
-	 * @return the Text.
-	 */
-	public Text toText();
-    
     /**
-     * Concatenate this with the given text. If this is mutable, the sequence
-     * is altered as well.
+     * Create an iterator over this sequence.
+     * 
+     * @return the iterator.
+     */
+    public TextIterator iterator();
+
+    /**
+     * Answer the length of this text sequence in Unicode character points. Note
+     * that this may <em>not</em> be equal to toString().length() because Java
+     * characters are only UCS-2 and may require two characters to represenent
+     * one Unicode code point.
+     * 
+     * @return the number of characters in this text.
+     */
+    public int length();
+
+    /**
+     * Return a subsequence of this starting at <var>off</var>, with <var>len</var>
+     * octets.
+     * 
+     * @param off
+     *            start index in octets.
+     * @param len
+     *            size of result in octets.
+     * @return partial text sequence.
+     */
+    public Text part(int off, int len);
+
+    /**
+     * Answer the size of this text sequence in octets.
+     * 
+     * @return the size, in encoded bytes.
+     */
+    public int size();
+
+    /**
+     * Convert this text sequence to a standard Java String.
+     * 
+     * @return this text as a string.
+     */
+    public String toString();
+
+    /**
+     * Convert this text sequence to an immutable Text.
+     * 
+     * @return the Text.
+     */
+    public Text toText();
+
+    /**
+     * Concatenate this with the given text. If this is mutable, the sequence is
+     * altered as well.
      */
     public TextSequence concat(Text text);
 
-	/**
-	 * Write the data of this text sequence to the output byte array <var>out</var>.
-	 * 
-	 * @param out
-	 *            the target byte array.
-	 * @param off
-	 *            offset into <var>out</var> where to start.
-	 * @param len
-	 *            amount of space in <var>out</var> counting from <var>off</var>.
-	 * @return the actual amount of bytes copied.
-	 */
-	public int writeTo(byte[] out, int off, int len);
+    /**
+     * Write the data of this text sequence to the output byte array <var>out</var>.
+     * 
+     * @param out
+     *            the target byte array.
+     * @param off
+     *            offset into <var>out</var> where to start.
+     * @param len
+     *            amount of space in <var>out</var> counting from <var>off</var>.
+     * @return the actual amount of bytes copied.
+     */
+    public int writeTo(byte[] out, int off, int len);
 
-	/**
-	 * Write the data of this text sequence to the given output stream.
-	 * 
-	 * @param out
-	 *            an output stream.
-	 * @throws IOException
-	 *             propagated from I/O.
-	 */
-	public void writeTo(OutputStream out) throws IOException;
+    /**
+     * Write the data of this text sequence to the given output stream.
+     * 
+     * @param out
+     *            an output stream.
+     * @throws IOException
+     *             propagated from I/O.
+     */
+    public void writeTo(OutputStream out) throws IOException;
+
+    /**
+     * Get the byte at <var>index</var>.
+     * 
+     * @param index
+     *            an integer, 0 <= index < this.size().
+     * @return the byte at index.
+     */
+    byte getByte(int index);
 }

@@ -21,6 +21,7 @@ package de.mobizcorp.hui;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
 
 import de.mobizcorp.qu8ax.Text;
@@ -68,6 +69,20 @@ public class HuiText extends HuiNode {
 
     private Text value;
 
+    public HuiText() {
+    }
+
+    public HuiText(HuiText old) throws IllegalArgumentException,
+            SecurityException, InstantiationException, IllegalAccessException,
+            InvocationTargetException, NoSuchMethodException {
+        super(old);
+        this.cols = old.cols;
+        this.editable = old.editable;
+        this.rows = old.rows;
+        this.secret = old.secret;
+        this.value = old.value;
+    }
+
     public int getCols() {
         return cols;
     }
@@ -103,7 +118,7 @@ public class HuiText extends HuiNode {
             HTML_INPUT2.writeTo(out);
             getId().writeTo(out);
             (secret ? HTML_INPUT32 : HTML_INPUT31).writeTo(out);
-            renderText(out, getValue());
+            renderValue(out);
             if (getCols() > 0) {
                 HTML_INPUT4.writeTo(out);
                 Text.valueOf(getCols(), 10).writeTo(out);
@@ -131,9 +146,13 @@ public class HuiText extends HuiNode {
                 HTML_DISABLED.writeTo(out);
             }
             HTML_AREA5.writeTo(out);
-            renderText(out, getValue());
+            renderValue(out);
             HTML_AREA6.writeTo(out);
         }
+    }
+
+    protected void renderValue(OutputStream out) throws IOException {
+        renderText(out, getValue());
     }
 
     public void setCols(int cols) {
@@ -157,7 +176,7 @@ public class HuiText extends HuiNode {
     }
 
     @Override
-    public void loadState(InputStream in) throws IOException {
+    protected void loadState(InputStream in) throws IOException {
         // text ist too big to fit into state
     }
 

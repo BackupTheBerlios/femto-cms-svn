@@ -1008,59 +1008,46 @@ public class Parser {
 
     public static final Text NO = Text.constant((byte) 'n', (byte) 'o');
 
-    public static final Text XML_CDATA_START = Text.constant((byte) '<',
-            (byte) '!', (byte) '[', (byte) 'C', (byte) 'D', (byte) 'A',
-            (byte) 'T', (byte) 'A', (byte) '[');
+    public static final Text XML_CDATA_START = Text.valueOf("<![CDATA[");
 
-    public static final Text XML_COMMENT_END = Text.constant((byte) '-',
-            (byte) '-', (byte) '>');
+    public static final Text XML_COMMENT_END = Text.constant(new byte[] { '-',
+            '-', '>' });
 
-    public static final Text XML_COMMENT_START = Text.constant((byte) '<',
-            (byte) '!', (byte) '-', (byte) '-');
+    public static final Text XML_COMMENT_START = Text.constant(new byte[] {
+            '<', '!', '-', '-' });
 
-    public static final Text XML_DECL_10 = Text.constant((byte) '1',
-            (byte) '.', (byte) '0');
+    public static final Text XML_DECL_10 = Text.constant(new byte[] { '1', '.',
+            '0' });
 
-    public static final Text XML_DECL_11 = Text.constant((byte) '1',
-            (byte) '.', (byte) '1');
+    public static final Text XML_DECL_11 = Text.constant(new byte[] { '1', '.',
+            '1' });
 
-    public static final Text XML_DECL_ENCODING = Text.constant((byte) 'e',
-            (byte) 'n', (byte) 'c', (byte) 'o', (byte) 'd', (byte) 'i',
-            (byte) 'n', (byte) 'g');
+    public static final Text XML_DECL_ENCODING = Text.valueOf("encoding");
 
     public static final Text XML_DECL_END = Text.constant((byte) '?',
             (byte) '>');
 
-    public static final Text XML_DECL_STANDALONE = Text.constant((byte) 's',
-            (byte) 't', (byte) 'a', (byte) 'n', (byte) 'd', (byte) 'a',
-            (byte) 'l', (byte) 'o', (byte) 'n', (byte) 'e');
+    public static final Text XML_DECL_STANDALONE = Text.valueOf("standalone");
 
-    public static final Text XML_DECL_START = Text.constant((byte) '<',
-            (byte) '?', (byte) 'x', (byte) 'm', (byte) 'l');
+    public static final Text XML_DECL_START = Text.valueOf("<?xml");
 
-    public static final Text XML_DECL_VERSION = Text.constant((byte) 'v',
-            (byte) 'e', (byte) 'r', (byte) 's', (byte) 'i', (byte) 'o',
-            (byte) 'n');
+    public static final Text XML_DECL_VERSION = Text.valueOf("version");
 
-    public static final Text XML_ENCODING_UTF_8 = Text.constant((byte) 'U',
-            (byte) 'T', (byte) 'F', (byte) '-', (byte) '8');
+    public static final Text XML_ENCODING_UTF_8 = Text.valueOf("UTF-8");
 
-    public static final Text XML_ENCODING_UTF8 = Text.constant((byte) 'U',
-            (byte) 'T', (byte) 'F', (byte) '8');
+    public static final Text XML_ENCODING_UTF8 = Text.constant(new byte[] {
+            'U', 'T', 'F', '8' });
 
     public static final Text XML_PI_END = Text.constant((byte) '?', (byte) '>');
 
     public static final Text XML_PI_START = Text.constant((byte) '<',
             (byte) '?');
 
-    public static final Text XMLNS = Text.constant((byte) 'x', (byte) 'm',
-            (byte) 'l', (byte) 'n', (byte) 's');
+    public static final Text XMLNS = Text.valueOf("xmlns");
 
-    public static final Text XMLNS_ = Text.constant((byte) 'x', (byte) 'm',
-            (byte) 'l', (byte) 'n', (byte) 's', (byte) ':');
+    public static final Text XMLNS_ = XMLNS.concat(COLON).toText();
 
-    public static final Text YES = Text.constant((byte) 'y', (byte) 'e',
-            (byte) 's');
+    public static final Text YES = Text.constant(new byte[] { 'y', 'e', 's' });
 
     protected final Handler handler;
 

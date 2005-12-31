@@ -62,15 +62,11 @@ public class HuiBuilder extends Sink {
 
     private int hereName;
 
-    private NamePool<Text> lNamePool;
-
-    private NamePool<NamePair> qNamePool;
-
     private HuiNode root;
 
     private int TAG_BEAN, TAG_BUILDER, TAG_BUTTON, TAG_COMBOBOX, TAG_LABEL,
-            TAG_OPTION, TAG_PANEL, TAG_PASSWORDFIELD, TAG_SELECT, TAG_TEXT,
-            TAG_TEXTAREA, TAG_TEXTFIELD;
+            TAG_OPTION, TAG_PANEL, TAG_PASSWORDFIELD, TAG_SELECT, TAG_TAB,
+            TAG_TABBEDPANE, TAG_TABS, TAG_TEXT, TAG_TEXTAREA, TAG_TEXTFIELD;
 
     public HuiNode getRoot() {
         return root;
@@ -110,8 +106,8 @@ public class HuiBuilder extends Sink {
             // parsing unknown element
             return;
         } else if (name == ATT_ACTION) {
-            if (here instanceof HuiButton) {
-                ((HuiButton) here).setAction(value);
+            if (here instanceof HuiLabel) {
+                ((HuiLabel) here).setAction(value);
             }
         } else if (name == ATT_COLS || name == ATT_COLUMNS) {
             if (here instanceof HuiPanel) {
@@ -152,11 +148,6 @@ public class HuiBuilder extends Sink {
                 ((HuiText) here).setValue(value);
             }
         }
-        if (here instanceof HuiBean) {
-            final NamePair pair = qNamePool.extern(name);
-            final Text lName = lNamePool.extern(pair.getB());
-            ((HuiBean) here).setAttribute(lName, value);
-        }
     }
 
     @Override
@@ -183,8 +174,6 @@ public class HuiBuilder extends Sink {
     @Override
     public void handleOpenDocument(final NamePool<Text> l,
             final NamePool<NamePair> q) {
-        this.lNamePool = l;
-        this.qNamePool = q;
         final int mt = l.intern(Text.EMPTY);
         Iterator<Text> list = TextLoader.fromXML(HuiBuilder.class);
         ATT_ACTION = Parser.nameFor(mt, list.next(), q, l);
@@ -210,6 +199,9 @@ public class HuiBuilder extends Sink {
         TAG_PANEL = Parser.nameFor(mt, list.next(), q, l);
         TAG_PASSWORDFIELD = Parser.nameFor(mt, list.next(), q, l);
         TAG_SELECT = Parser.nameFor(mt, list.next(), q, l);
+        TAG_TAB = Parser.nameFor(mt, list.next(), q, l);
+        TAG_TABBEDPANE = Parser.nameFor(mt, list.next(), q, l);
+        TAG_TABS = Parser.nameFor(mt, list.next(), q, l);
         TAG_TEXT = Parser.nameFor(mt, list.next(), q, l);
         TAG_TEXTFIELD = Parser.nameFor(mt, list.next(), q, l);
         TAG_TEXTAREA = Parser.nameFor(mt, list.next(), q, l);
@@ -229,7 +221,7 @@ public class HuiBuilder extends Sink {
             here = new HuiButton();
         } else if (name == TAG_LABEL) {
             here = new HuiLabel();
-        } else if (name == TAG_PANEL) {
+        } else if (name == TAG_PANEL || name == TAG_TAB) {
             here = new HuiPanel();
         } else if (name == TAG_PASSWORDFIELD) {
             HuiText text = new HuiText();
@@ -237,6 +229,8 @@ public class HuiBuilder extends Sink {
             here = text;
         } else if (name == TAG_SELECT || name == TAG_COMBOBOX) {
             here = new HuiSelect();
+        } else if (name == TAG_TABBEDPANE || name == TAG_TABS) {
+            here = new HuiTabs();
         } else if (name == TAG_TEXT || name == TAG_TEXTFIELD
                 || name == TAG_TEXTAREA) {
             here = new HuiText();
