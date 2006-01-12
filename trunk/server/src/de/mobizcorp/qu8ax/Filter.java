@@ -20,6 +20,8 @@ package de.mobizcorp.qu8ax;
 
 import java.io.IOException;
 
+import de.mobizcorp.lib.Text;
+
 /**
  * Simple generic filter base class.
  * 

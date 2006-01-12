@@ -18,6 +18,8 @@
  */
 package de.mobizcorp.qu8ax;
 
+import de.mobizcorp.lib.Text;
+
 /**
  * Simple sink, ignoring all incoming events.
  * 

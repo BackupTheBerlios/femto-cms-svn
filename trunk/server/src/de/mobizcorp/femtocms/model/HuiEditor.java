@@ -27,8 +27,8 @@ import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 
 import de.mobizcorp.hui.HuiText;
-import de.mobizcorp.qu8ax.Text;
-import de.mobizcorp.qu8ax.TextBuffer;
+import de.mobizcorp.lib.Text;
+import de.mobizcorp.lib.TextBuffer;
 
 /**
  * Editor pane for femtocms.

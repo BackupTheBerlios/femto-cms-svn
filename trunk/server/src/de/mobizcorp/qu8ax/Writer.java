@@ -8,6 +8,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Stack;
 
+import de.mobizcorp.lib.Text;
+import de.mobizcorp.lib.TextBuffer;
+
 public class Writer extends FilterOutputStream implements Handler {
 
     private static final Text XML_DECL, XML_CDATA1, XML_CDATA2, XML_XMLNS_,

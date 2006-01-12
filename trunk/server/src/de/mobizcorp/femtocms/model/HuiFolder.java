@@ -33,10 +33,10 @@ import de.mobizcorp.hui.HuiLabel;
 import de.mobizcorp.hui.HuiNode;
 import de.mobizcorp.hui.HuiSelect;
 import de.mobizcorp.hui.Path;
-import de.mobizcorp.qu8ax.Text;
-import de.mobizcorp.qu8ax.TextBuffer;
+import de.mobizcorp.lib.Text;
+import de.mobizcorp.lib.TextBuffer;
+import de.mobizcorp.lib.TextParser;
 import de.mobizcorp.qu8ax.TextLoader;
-import de.mobizcorp.qu8ax.TextParser;
 
 /**
  * Folder browser for femtocms.

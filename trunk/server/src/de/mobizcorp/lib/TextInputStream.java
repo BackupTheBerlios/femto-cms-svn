@@ -1,5 +1,5 @@
 /*
- * Quick UTF-8 API for XML.
+ * Plain UTF-8 API.
  * Copyright(C) 2005 Klaus Rennecke, all rights reserved.
  *
  * This library is free software; you can redistribute it and/or
@@ -17,7 +17,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package de.mobizcorp.qu8ax;
+package de.mobizcorp.lib;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -18,7 +18,7 @@
  */
 package de.mobizcorp.hui;
 
-import de.mobizcorp.qu8ax.Text;
+import de.mobizcorp.lib.Text;
 
 /**
  * Action handler interface for HUI.

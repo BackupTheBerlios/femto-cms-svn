@@ -18,6 +18,8 @@
  */
 package de.mobizcorp.qu8ax;
 
+import de.mobizcorp.lib.FNV1aHash;
+
 /**
  * A pair of names, as identifiers from a name pool.
  * 

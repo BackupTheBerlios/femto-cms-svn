@@ -28,10 +28,10 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Iterator;
 
-import de.mobizcorp.qu8ax.Text;
-import de.mobizcorp.qu8ax.TextBuffer;
+import de.mobizcorp.lib.Text;
+import de.mobizcorp.lib.TextBuffer;
+import de.mobizcorp.lib.TextParser;
 import de.mobizcorp.qu8ax.TextLoader;
-import de.mobizcorp.qu8ax.TextParser;
 
 /**
  * HUI backend server.

@@ -6,6 +6,8 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+import de.mobizcorp.lib.Text;
+
 public class SAXAdapter extends DefaultHandler {
 
     private final Handler handler;

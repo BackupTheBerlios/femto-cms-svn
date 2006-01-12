@@ -21,6 +21,9 @@ package de.mobizcorp.qu8ax;
 import java.io.IOException;
 import java.io.InputStream;
 
+import de.mobizcorp.lib.Text;
+import de.mobizcorp.lib.TextBuffer;
+
 /**
  * Resolver for internal and external entities.
  * 

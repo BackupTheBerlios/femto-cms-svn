@@ -25,7 +25,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import de.mobizcorp.qu8ax.Text;
+import de.mobizcorp.lib.Text;
 import de.mobizcorp.qu8ax.TextLoader;
 
 /**

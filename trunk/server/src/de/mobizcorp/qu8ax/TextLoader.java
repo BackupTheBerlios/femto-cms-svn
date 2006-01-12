@@ -23,6 +23,9 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import de.mobizcorp.lib.Text;
+import de.mobizcorp.lib.TextSequence;
+
 /**
  * Load a list of Text constants from a bencoded data file.
  * 

@@ -23,13 +23,13 @@ import java.io.InputStream;
 import java.util.Iterator;
 import java.util.Stack;
 
+import de.mobizcorp.lib.Text;
+import de.mobizcorp.lib.TextBuffer;
 import de.mobizcorp.qu8ax.NamePair;
 import de.mobizcorp.qu8ax.NamePool;
 import de.mobizcorp.qu8ax.Parser;
 import de.mobizcorp.qu8ax.Resolver;
 import de.mobizcorp.qu8ax.Sink;
-import de.mobizcorp.qu8ax.Text;
-import de.mobizcorp.qu8ax.TextBuffer;
 import de.mobizcorp.qu8ax.TextLoader;
 
 /**

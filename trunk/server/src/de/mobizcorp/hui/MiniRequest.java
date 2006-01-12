@@ -22,8 +22,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 
-import de.mobizcorp.qu8ax.Text;
-import de.mobizcorp.qu8ax.TextBuffer;
+import de.mobizcorp.lib.Text;
+import de.mobizcorp.lib.TextBuffer;
 
 /**
  * HTTP request parser and model.

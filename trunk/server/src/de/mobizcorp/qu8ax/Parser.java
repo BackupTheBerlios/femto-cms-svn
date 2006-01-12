@@ -23,6 +23,9 @@ import java.io.InputStream;
 import java.io.PushbackInputStream;
 import java.util.Stack;
 
+import de.mobizcorp.lib.Text;
+import de.mobizcorp.lib.TextBuffer;
+
 /**
  * Recursive descent parser for XML versions 1.0 and 1.1.
  * 

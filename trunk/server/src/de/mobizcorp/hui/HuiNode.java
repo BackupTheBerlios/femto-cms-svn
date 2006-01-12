@@ -24,9 +24,9 @@ import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
 
+import de.mobizcorp.lib.Text;
+import de.mobizcorp.lib.TextInputStream;
 import de.mobizcorp.qu8ax.Resolver;
-import de.mobizcorp.qu8ax.Text;
-import de.mobizcorp.qu8ax.TextInputStream;
 import de.mobizcorp.qu8ax.TextLoader;
 
 /**

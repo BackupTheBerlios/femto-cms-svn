@@ -30,6 +30,7 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 
 import junit.framework.TestCase;
+import de.mobizcorp.lib.Text;
 import de.mobizcorp.qu8ax.WriterTest.XmlTest;
 
 /**
