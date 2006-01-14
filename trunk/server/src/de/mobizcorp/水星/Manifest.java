@@ -42,6 +42,11 @@ public class Manifest extends History {
 			this.version = version;
 			this.execute = execute;
 		}
+
+        @Override
+        public String toString() {
+            return version.toString() +  (execute ? " 755 " : " 644 ");
+        }
 	}
 
 	private static final Text X = Text.constant((byte) 'x');
@@ -53,9 +58,7 @@ public class Manifest extends History {
 		files.addAll(map.keySet());
 		for (Text f : files) {
 			Entry entry = map.get(f);
-			System.out.print(entry.version);
-			System.out.print(entry.execute ? " 755 " : " 644 ");
-			System.out.println(f);
+			System.out.println(entry.toString() + f);
 		}
 	}
 

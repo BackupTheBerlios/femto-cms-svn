@@ -200,20 +200,16 @@ public final class Version {
 
 	private static void update(final MessageDigest digest, final byte[] p1,
 			final byte[] p2) {
-		switch (compare(p1, p2)) {
-		case -1:
-			if (p1 != null)
-				digest.update(p1);
-			if (p2 != null)
-				digest.update(p2);
-			break;
-		case 1:
-			if (p2 != null)
-				digest.update(p2);
-		case 0: // identical parent
-			if (p1 != null)
-				digest.update(p1);
-			break;
+		if (compare(p1, p2) == 1) {
+            if (p2 != null)
+                digest.update(p2);
+            if (p1 != null)
+                digest.update(p1);
+        } else {
+            if (p1 != null)
+                digest.update(p1);
+            if (p2 != null)
+                digest.update(p2);
 		}
 	}
 

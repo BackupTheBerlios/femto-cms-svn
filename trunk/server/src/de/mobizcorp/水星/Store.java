@@ -211,21 +211,6 @@ public class Store {
 		throw new IllegalArgumentException("no store found for '" + cwd + "'");
 	}
 
-	public static void main(String args[]) throws Exception {
-		final Store s = new Store(args[0]);
-		System.out.println("tags:");
-		List<TagEntry> tags = s.taglist();
-		Collections.reverse(tags);
-		for (TagEntry t : tags) {
-			System.out.printf("%-30s %5d:%s\n", t.t, t.g, t.v);
-		}
-		System.out.println("----");
-		System.out.flush();
-		Element element = s.file(Text.valueOf(args[1]));
-		System.out.write(element.read(element.tip()));
-		System.out.flush();
-	}
-
 	private final File base;
 
 	private final History history;
@@ -359,8 +344,8 @@ public class Store {
 	private void addTag(Text text) {
 		int mark = text.lastIndexOf(' ');
 		if (mark != -1) {
-			Text k = trim(text, 0, mark);
-			Text n = text.part(mark + 1, text.size() - mark - 1);
+			Text n = trim(text, 0, mark);
+			Text k = text.part(mark + 1, text.size() - mark - 1);
 			tags.put(k, Version.create(n));
 		}
 	}

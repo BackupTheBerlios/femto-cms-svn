@@ -51,8 +51,8 @@ import javax.net.ssl.TrustManagerFactory;
 
 import simple.http.connect.Connection;
 import simple.http.connect.ConnectionFactory;
-import de.mobizcorp.femtocms.engine.ErrorStreamLogger;
-import de.mobizcorp.femtocms.engine.InputStreamEater;
+import de.mobizcorp.lib.ErrorStreamLogger;
+import de.mobizcorp.lib.InputStreamEater;
 
 /**
  * @author Copyright(C) 2005 mobizcorp Europe Ltd., all rights reserved.
@@ -220,7 +220,7 @@ public class ServerMain {
             InterruptedException {
         Process process = builder.start();
         ErrorStreamLogger logger = ErrorStreamLogger.attach(process);
-        new InputStreamEater(process.getInputStream()).close();
+        new InputStreamEater(process).close();
         if (logger.getExitCode() != 0) {
             throw new IOException("error executing: " + builder.command());
         }

@@ -24,9 +24,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 
-import de.mobizcorp.femtocms.engine.ErrorStreamLogger;
-import de.mobizcorp.femtocms.engine.InputStreamEater;
 import de.mobizcorp.hui.HuiText;
+import de.mobizcorp.lib.ErrorStreamLogger;
+import de.mobizcorp.lib.InputStreamEater;
 import de.mobizcorp.lib.Text;
 import de.mobizcorp.lib.TextBuffer;
 
@@ -73,7 +73,7 @@ public class HuiHistory extends HuiText {
         ProcessBuilder builder = new ProcessBuilder(args).directory(new File(folder.toString()));
         Process process = builder.start();
         ErrorStreamLogger.attach(process);
-        return new InputStreamEater(process.getInputStream());
+        return new InputStreamEater(process);
     }
     
     public final Text getFile() {

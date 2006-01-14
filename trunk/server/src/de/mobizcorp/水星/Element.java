@@ -91,9 +91,10 @@ public class Element extends History {
 
 	public byte[] read(Version version) throws IOException, DataFormatException {
 		byte[] result = contents(version);
-		if (result.length < 2 || (result[0] != 1 && result[1] != '\n')) {
+		if (result.length < 2 || result[0] != 1 || result[1] != '\n') {
 			return result;
 		}
+        // strip meta-data
 		Text text = Text.constant(result);
 		int mark = text.indexOf(_MM, 2);
 		return text.part(mark + 2, text.size() - mark - 2).toBytes();

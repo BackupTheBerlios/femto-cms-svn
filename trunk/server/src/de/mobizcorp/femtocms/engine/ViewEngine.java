@@ -38,6 +38,9 @@ import javax.xml.transform.Templates;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 
+import de.mobizcorp.lib.ErrorStreamLogger;
+import de.mobizcorp.lib.InputStreamEater;
+
 import simple.util.cache.Cache; // FIXME
 
 /**
@@ -183,7 +186,7 @@ public class ViewEngine extends NullEngine {
         ProcessBuilder builder = new ProcessBuilder(args).directory(base);
         Process process = builder.start();
         ErrorStreamLogger.attach(process);
-        return new InputStreamEater(process.getInputStream());
+        return new InputStreamEater(process);
     }
 
     public String modified() {

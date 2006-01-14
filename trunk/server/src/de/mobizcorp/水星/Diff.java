@@ -31,232 +31,348 @@ import de.mobizcorp.lib.FNV1aHash;
  * @author Copyright(C) 2006 Klaus Rennecke, all rights reserved.
  */
 public class Diff {
-	private static class Hunk {
-		public int a1, a2, b1, b2;
+    public static final class Hunk {
+        public final int leftStart, leftLimit, rightStart, rightLimit;
 
-		public Hunk(final int a1, final int a2, final int b1, final int b2) {
-			this.a1 = a1;
-			this.a2 = a2;
-			this.b1 = b1;
-			this.b2 = b2;
-		}
-	}
+        public Hunk(final int leftStart, final int leftLimit,
+                final int rightStart, final int rightLimit) {
+            this.leftStart = leftStart;
+            this.leftLimit = leftLimit;
+            this.rightStart = rightStart;
+            this.rightLimit = rightLimit;
+        }
 
-	private static class Line {
-		public final byte[] b;
+        public Hunk(final int leftMatch, final int rightMatch, final int length) {
+            this(leftMatch, leftMatch + length, rightMatch, rightMatch + length);
+        }
 
-		public int h, len, n, e, l;
+        private static Hunk longestMatch(final Line[] left, final Line[] right,
+                final int[] pos, final int[] len, int leftStart, int leftLimit,
+                int rightStart, int rightLimit) {
+            int hunkLen = 0;
+            final int hunkLeft, hunkRight;
+            {
+                int maxLeft = leftStart, maxRight = rightStart;
 
-		public Line(final int h, final int len, final int n, final int e,
-				final int l, final byte[] b) {
-			this.h = h;
-			this.len = len;
-			this.n = n;
-			this.e = e;
-			this.l = l;
-			this.b = b;
-		}
-	}
+                for (int leftLine = leftStart; leftLine < leftLimit; leftLine++) {
+                    int rightLine = left[leftLine].next;
+                    /* skip things before the current block */
+                    while (rightLine != -1 && rightLine < rightStart) {
+                        rightLine = right[rightLine].next;
+                    }
 
-	public static byte[] bdiff(final byte[] a, final byte[] b) {
-		final Line[] al = splitlines(a);
-		final Line[] bl = splitlines(b);
-		final List<Hunk> l = diff(al, bl);
-		/* calculate length of output */
-		int len = 0, la = 0, lb = 0;
-		for (Hunk h : l) {
-			if (h.a1 != la || h.b1 != lb)
-				len += 12 + bl[h.b1].l - bl[lb].l;
-			la = h.a2;
-			lb = h.b2;
-		}
+                    /* loop through all lines match left[leftPos] in right */
+                    while (rightLine != -1 && rightLine < rightLimit) {
+                        /* does this extend an earlier match? */
+                        final int newLen;
+                        if (leftLine > leftStart && rightLine > rightStart
+                                && pos[rightLine - 1] == leftLine - 1) {
+                            newLen = len[rightLine - 1] + 1;
+                        } else {
+                            newLen = 1;
+                        }
+                        pos[rightLine] = leftLine;
+                        len[rightLine] = newLen;
 
-		/* build binary patch */
-		la = lb = 0;
-		final byte[] result = new byte[len];
-		ByteBuffer rb = ByteBuffer.wrap(result);
-		for (Hunk h : l) {
-			if (h.a1 != la || h.b1 != lb) {
-				len = bl[h.b1].l - bl[lb].l;
-				rb.putInt(al[la].l - al[0].l);
-				rb.putInt(al[h.a1].l - al[0].l);
-				rb.putInt(len);
-				rb.put(bl[lb].b, bl[lb].l, len);
-			}
-			la = h.a2;
-			lb = h.b2;
-		}
-		return result;
-	}
+                        /* best match so far? */
+                        if (newLen > hunkLen) {
+                            maxLeft = leftLine;
+                            maxRight = rightLine;
+                            hunkLen = newLen;
+                        }
+                        rightLine = right[rightLine].next;
+                    }
+                }
 
-	public static List<Hunk> blocks(final byte[] a, final byte[] b) {
-		final Line[] al = splitlines(a);
-		final Line[] bl = splitlines(b);
-		return diff(al, bl);
-	}
+                if (hunkLen != 0) {
+                    hunkLeft = maxLeft - hunkLen + 1;
+                    hunkRight = maxRight - hunkLen + 1;
+                } else {
+                    hunkLeft = maxLeft;
+                    hunkRight = maxRight;
+                }
+            }
 
-	private static boolean cmp(final byte[] a, final int a0, final byte[] b,
-			final int b0, final int len) {
-		for (int i = 0; i < len; i++) {
-			if (a[a0 + i] != b[b0 + i]) {
-				return true;
-			}
-		}
-		return false;
-	}
+            /* expand match to include neighboring lines */
+            int prefix = 0;
+            while (hunkLeft - prefix > leftStart
+                    && hunkRight - prefix > rightStart
+                    && left[hunkLeft - prefix - 1].slot == right[hunkRight
+                            - prefix - 1].slot) {
+                prefix++;
+            }
+            while (hunkLeft + hunkLen < leftLimit
+                    && hunkRight + hunkLen < rightLimit
+                    && left[hunkLeft + hunkLen].slot == right[hunkRight
+                            + hunkLen].slot) {
+                hunkLen++;
+            }
 
-	private static boolean cmp(final Line a, final Line b) {
-		return a != b
-				&& (a.h != b.h || a.len != b.len || cmp(a.b, a.l, b.b, b.l,
-						b.len));
-	}
+            final int length = hunkLen + prefix;
+            if (length == 0) {
+                return null;
+            }
+            return new Hunk(hunkLeft - prefix, hunkRight - prefix, length);
+        }
 
-	private static List<Hunk> diff(final Line[] a, final Line[] b) {
-		final List<Hunk> result = new ArrayList<Hunk>();
-		equatelines(a, b);
-		final int[] pos = new int[b.length * 2];
-		recurse(a, b, pos, 0, a.length, 0, b.length, result);
-		result.add(new Hunk(a.length, 0, b.length, 0));
-		return result;
-	}
+        public static List<Hunk> diff(final Line[] left, final Line[] right) {
+            Line.equate(left, right);
+            final int[] pos = new int[right.length];
+            final int[] len = new int[right.length];
+            final List<Hunk> result = new ArrayList<Hunk>();
+            recurse(left, right, pos, len, 0, left.length, 0, right.length,
+                    result);
+            result.add(new Hunk(left.length, 0, right.length, 0));
+            return result;
+        }
 
-	private static void equatelines(final Line[] a, final Line[] b) {
-		final int bn = b.length, buckets = hashSize(bn);
-		final int[] h = new int[buckets * 2];
-		for (int i = 0; i <= buckets;) {
-			h[i++] = -1;
-			h[i++] = 0;
-		}
-		final int mask = (buckets - 1) << 1;
-		for (int i = bn - 1; i >= 0; i--) {
-			/* find the equivalence class */
-			final int j = findslot(b[i], h, mask, b);
+        private static void recurse(final Line[] left, final Line[] right,
+                final int[] pos, final int[] len, final int leftStart,
+                final int leftLimit, final int rightStart,
+                final int rightLimit, final List<Hunk> hunks) {
 
-			/* add to the head of the equivalence class */
-			b[i].n = h[j];
-			b[i].e = j >>> 1;
-			h[j] = i;
-			h[j + 1]++; /* keep track of popularity */
-		}
-		/* compute popularity threshold */
-		final int an = a.length, t = (bn >= 200) ? bn / 100 : bn + 1;
-		/* match items in a to their equivalence class in b */
-		for (int i = 0; i < an; i++) {
-			/* find the equivalence class */
-			final int j = findslot(a[i], h, mask, b);
+            /* find the longest match in this chunk */
+            Hunk hunk = Hunk.longestMatch(left, right, pos, len, leftStart,
+                    leftLimit, rightStart, rightLimit);
+            if (hunk == null)
+                return;
+            /* and recurse on the remaining chunks on either side */
+            recurse(left, right, pos, len, leftStart, hunk.leftStart,
+                    rightStart, hunk.rightStart, hunks);
+            hunks.add(hunk);
+            recurse(left, right, pos, len, hunk.leftLimit, leftLimit,
+                    hunk.rightLimit, rightLimit, hunks);
+        }
+    }
 
-			a[i].e = j >>> 1; /* use equivalence class for quick compare */
-			if (h[j + 1] <= t) {
-				a[i].n = h[j]; /* point to head of match list */
-			} else {
-				a[i].n = -1; /* too popular */
-			}
-		}
-	}
+    private static final class Line {
+        /** Data for this line. */
+        public final byte[] data;
 
-	private static int findslot(final Line l, final int[] h, final int mask,
-			final Line[] b) {
-		int j = (l.h * 2) & mask;
-		while (h[j] != -1) {
-			if (!cmp(l, b[h[j]])) {
-				break;
-			} else {
-				j = (j + 2) & mask;
-			}
-		}
-		return j;
-	}
+        /** Hash value over this line. */
+        public final int hash;
 
-	private static int hashSize(final int n) {
-		int result = 2;
-		while (result < n + 1) {
-			result *= 2;
-		}
-		return result;
-	}
+        /** Offset and length in data. */
+        public final int offset, length;
 
-	private static int[] longest_match(final Line[] a, final Line[] b,
-			final int[] pos, int a1, int a2, int b1, int b2) {
-		int mi = a1, mj = b1, mk = 0, mb = 0, k;
+        /** Equivalence class - slot in hash table. */
+        public int slot = 0;
 
-		for (int i = a1; i < a2; i++) {
-			int j = a[i].n;
-			/* skip things before the current block */
-			while (j != -1 && j < b1) {
-				j = b[j].n;
-			}
+        /** Next line in same equivalence class. */
+        public int next = -1;
 
-			/* loop through all lines match a[i] in b */
-			for (; j != -1 && j < b2; j = b[j].n) {
-				/* does this extend an earlier match? */
-				if (i > a1 && j > b1 && pos[(j - 1) * 2] == i - 1) {
-					k = pos[(j - 1) * 2 + 1] + 1;
-				} else {
-					k = 1;
-				}
-				pos[j * 2] = i;
-				pos[j * 2 + 1] = k;
+        public Line(final int hash, final byte[] data, final int offset,
+                final int length) {
+            this.hash = hash;
+            this.length = length;
+            this.offset = offset;
+            this.data = data;
+        }
 
-				/* best match so far? */
-				if (k > mk) {
-					mi = i;
-					mj = j;
-					mk = k;
-				}
-			}
-		}
+        /**
+         * Split data into lines, computing their hash as we go.
+         * 
+         * @param data
+         *            binary data.
+         * @return an array of lines from <var>data</var>.
+         */
+        public static Line[] split(final byte[] data) {
+            int size = 0;
+            final int limit = data.length - 1;
+            for (int scan = 0; scan <= limit; scan++) {
+                if (data[scan] == '\n' || scan == limit) {
+                    size++;
+                }
+            }
+            final Line result[] = new Line[size];
+            int mark = 0, hash = FNV1aHash.FNV32_OFFSET_BASIS;
+            for (int scan = 0, i = 0; scan <= limit; scan++) {
+                hash = FNV1aHash.next(hash, data[scan]);
+                if (data[scan] == '\n' || scan == limit) {
+                    final int end = scan + 1;
+                    result[i++] = new Line(hash, data, mark, end - mark);
+                    mark = end;
+                    hash = FNV1aHash.FNV32_OFFSET_BASIS;
+                }
+            }
+            return result;
+        }
 
-		if (mk != 0) {
-			mi = mi - mk + 1;
-			mj = mj - mk + 1;
-		}
+        public static void equate(final Line[] left, final Line[] right) {
+            new Table(right).match(left, threshold(right.length));
+        }
 
-		/* expand match to include neighboring popular lines */
-		while (mi - mb > a1 && mj - mb > b1
-				&& a[mi - mb - 1].e == b[mj - mb - 1].e) {
-			mb++;
-		}
-		while (mi + mk < a2 && mj + mk < b2 && a[mi + mk].e == b[mj + mk].e) {
-			mk++;
-		}
+        private static int threshold(final int length) {
+            return (length >= 200) ? length / 100 : length + 1;
+        }
 
-		return mk + mb == 0 ? null : new int[] { mi - mb, mj - mb, mk + mb };
+        @Override
+        public boolean equals(Object obj) {
+            try {
+                return equals((Line) obj);
+            } catch (ClassCastException e) {
+                return false;
+            }
+        }
 
-	}
+        public boolean equals(final Line other) {
+            if (this == other) {
+                return true;
+            } else if (this.hash != other.hash || this.length != other.length) {
+                return false;
+            } else {
+                int scan = this.length;
+                final byte[] a = this.data, b = other.data;
+                final int a0 = this.offset, b0 = other.offset;
+                while (--scan >= 0) {
+                    if (a[a0 + scan] != b[b0 + scan]) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
 
-	private static void recurse(final Line[] a, final Line[] b,
-			final int[] pos, final int a1, final int a2, final int b1,
-			final int b2, final List<Hunk> l) {
+        @Override
+        public int hashCode() {
+            return hash;
+        }
+    }
 
-		/* find the longest match in this chunk */
-		int[] t = longest_match(a, b, pos, a1, a2, b1, b2);
-		if (t == null)
-			return;
-		final int i = t[0], j = t[1], k = t[2];
-		/* and recurse on the remaining chunks on either side */
-		recurse(a, b, pos, a1, i, b1, j, l);
-		l.add(new Hunk(i, i + k, j, j + k));
-		recurse(a, b, pos, i + k, a2, j + k, b2, l);
-	}
+    private static final class Table {
+        private final int[] index, count;
 
-	private static Line[] splitlines(final byte[] a) {
-		int n = 0;
-		final int len = a.length;
-		for (int p = 0; p < len; p++) {
-			if (a[p] == '\n' || p == len - 1) {
-				n++;
-			}
-		}
-		final Line result[] = new Line[n];
-		int b = 0, h = FNV1aHash.FNV32_OFFSET_BASIS;
-		for (int p = 0, i = 0; p < len; p++) {
-			h = FNV1aHash.next(h, a[p]);
-			if (a[p] == '\n' || p == len - 1) {
-				result[i++] = new Line(h, p - b + 1, -1, 0, b, a);
-				b = p + 1;
-				h = FNV1aHash.FNV32_OFFSET_BASIS;
-			}
-		}
-		return result;
-	}
+        private final Line[] lines;
+
+        public Table(final Line[] lines) {
+            // allocate one more for mismatches in left
+            final int size = hashSize(lines.length + 1);
+            this.lines = lines;
+            this.index = new int[size];
+            this.count = new int[size];
+            fill();
+        }
+
+        private void fill() {
+            final int[] index = this.index;
+            int scan = index.length;
+            while (--scan >= 0) {
+                index[scan] = -1;
+            }
+            final Line[] lines = this.lines;
+            final int[] count = this.count;
+            scan = lines.length;
+            while (--scan >= 0) {
+                final Line line = lines[scan];
+                final int slot = findSlot(line);
+                line.next = index[slot];
+                line.slot = slot;
+                index[slot] = scan;
+                count[slot]++;
+            }
+        }
+
+        private static int hashSize(final int minimum) throws OutOfMemoryError {
+            int scan = 1;
+            while (scan < minimum) {
+                if ((scan <<= 1) == 0) {
+                    throw new OutOfMemoryError("minimum: " + minimum);
+                }
+            }
+            return scan;
+        }
+
+        public void match(final Line[] left, final int threshold) {
+            final int length = left.length;
+            for (int scan = 0; scan < length; scan++) {
+                final Line line = left[scan];
+                final int slot = findSlot(line);
+                line.slot = slot;
+                if (count[slot] <= threshold) {
+                    // point to head of match list
+                    line.next = index[slot];
+                } else {
+                    // too popular
+                    line.next = -1;
+                }
+            }
+        }
+
+        private int findSlot(final Line line) {
+            final int[] index = this.index;
+            final Line[] lines = this.lines;
+            final int mask = index.length - 1;
+            int scan = line.hash & mask;
+            while (index[scan] != -1 && !line.equals(lines[index[scan]])) {
+                scan = (scan + 1) & mask;
+            }
+            return scan;
+        }
+    }
+
+    /**
+     * @param left
+     *            data.
+     * @param right
+     *            data.
+     * @return binary difference between the left and right data.
+     */
+    public static byte[] bdiff(final byte[] left, final byte[] right) {
+        final Line[] leftLines = Line.split(left);
+        final Line[] rightLines = Line.split(right);
+        return encode(leftLines, rightLines, Hunk.diff(leftLines, rightLines));
+    }
+
+    /**
+     * @param left
+     *            data.
+     * @param right
+     *            data.
+     * @return list of hunks that match from left to right data.
+     */
+    public static List<Hunk> blocks(final byte[] left, final byte[] right) {
+        final Line[] leftLines = Line.split(left);
+        final Line[] rightLines = Line.split(right);
+        return Hunk.diff(leftLines, rightLines);
+    }
+
+    private static byte[] encode(final Line[] left, final Line[] right,
+            final List<Hunk> hunks) {
+        final byte[] result = new byte[bdiffSize(right, hunks)];
+        final ByteBuffer rb = ByteBuffer.wrap(result);
+        int leftPos = 0, rightPos = 0;
+        for (Hunk h : hunks) {
+            if (h.leftStart != leftPos || h.rightStart != rightPos) {
+                final int length = right[h.rightStart].offset
+                        - right[rightPos].offset;
+                rb.putInt(left[leftPos].offset - left[0].offset);
+                rb.putInt(left[h.leftStart].offset - left[0].offset);
+                rb.putInt(length);
+                rb.put(right[rightPos].data, right[rightPos].offset, length);
+            }
+            leftPos = h.leftLimit;
+            rightPos = h.rightLimit;
+        }
+        return result;
+    }
+
+    /**
+     * Calculate the size of a binary diff for <var>lines</var> and <var>hunks</var>.
+     * 
+     * @param lines
+     *            lines from right side.
+     * @param hunks
+     *            pre-computed diff hunks.
+     * @return the size of the resulting bdiff.
+     */
+    private static int bdiffSize(final Line[] lines, final List<Hunk> hunks) {
+        int result = 0, la = 0, lb = 0;
+        for (Hunk h : hunks) {
+            if (h.leftStart != la || h.rightStart != lb)
+                result += 12 + lines[h.rightStart].offset - lines[lb].offset;
+            la = h.leftLimit;
+            lb = h.rightLimit;
+        }
+        return result;
+    }
 }

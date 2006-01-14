@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-package de.mobizcorp.femtocms.engine;
+package de.mobizcorp.lib;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -27,8 +27,15 @@ import java.io.InputStream;
  */
 public class InputStreamEater extends BufferedInputStream {
 
+    private Process p;
+
     public InputStreamEater(InputStream in) {
         super(in);
+    }
+    
+    public InputStreamEater(Process p) {
+        this(p.getInputStream());
+        this.p = p;
     }
 
     @Override
@@ -39,8 +46,11 @@ public class InputStreamEater extends BufferedInputStream {
             while ((n = available()) > 0) {
                 super.skip(n);
             }
-        } catch (IOException e) {
-            // ignored
+            if (p != null) {
+                p.waitFor();
+            }
+        } catch (InterruptedException e) {
+            throw new IOException(e.toString());
         }
         super.close();
     }
