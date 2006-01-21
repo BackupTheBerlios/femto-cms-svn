@@ -114,6 +114,8 @@ public class RFC2279 {
         } else if (b <= 0xfd) {
             b &= 0x01;
             n = 5;
+        } else if (b == 0xff) {
+            return -1; // end of file
         } else {
             throw new IOException("invalid UTF-8 start byte: "
                     + Integer.toHexString(b));
