@@ -23,6 +23,7 @@ public class StoreTest extends TestCase {
     public void testFile() throws IOException, DataFormatException {
         final Store s = new Store(CWD);
         final File cwd = new File(CWD);
+        assertTrue(cwd.isDirectory());
         final File tmp = File.createTempFile("StoreTest.", ".tmp");
         final Manifest m = s.manifest();
         for (Text name : m.read(m.tip()).keySet()) {

@@ -50,13 +50,12 @@ public class History {
 	}
 
 	public byte[] chunk(int g) throws IOException, DataFormatException {
-		final int offset = index.offset(g);
-		final int length = index.length(g);
-		byte[] buffer = new byte[length];
+        final Index.Entry entry = index.get(g);
+		byte[] buffer = new byte[entry.length];
 		if (dataFile == null) {
 			dataFile = new RandomAccessFile(chunks, "r");
 		}
-		dataFile.seek(offset);
+		dataFile.seek(entry.offset);
 		dataFile.readFully(buffer);
 		return Store.decompress(buffer);
 	}
