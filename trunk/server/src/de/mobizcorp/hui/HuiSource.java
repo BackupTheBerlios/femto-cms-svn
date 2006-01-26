@@ -62,6 +62,7 @@ public class HuiSource implements Source {
 
     private static HuiNode buildFrom(StreamSource source) throws IOException,
             SAXException {
+        try {
         if (source.getReader() != null) {
             return buildFrom(XMLReaderFactory.createXMLReader(), SAXSource
                     .sourceToInputSource(source));
@@ -69,6 +70,14 @@ public class HuiSource implements Source {
             return buildFrom(source.getInputStream());
         } else {
             return buildFrom(source.getSystemId());
+        }
+        } finally {
+            if (source.getReader() != null) {
+                source.getReader().close();
+            }
+            if (source.getInputStream() != null) {
+                source.getInputStream().close();
+            }
         }
     }
 

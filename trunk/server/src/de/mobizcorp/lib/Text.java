@@ -23,7 +23,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 
-
 /**
  * Immutable implementation of a text sequence. This class is intended to be
  * used analogous to the standard Java String class.
@@ -180,7 +179,11 @@ public final class Text implements TextSequence {
     }
 
     public static Text valueOf(Object o) {
-        return new Text(String.valueOf(o));
+        if (o instanceof Text) {
+            return (Text) o;
+        } else {
+            return new Text(String.valueOf(o));
+        }
     }
 
     private final byte[] data;
@@ -327,9 +330,9 @@ public final class Text implements TextSequence {
         int i = off + len > this.len - t.len + 1 ? this.len - t.len + 1 : off
                 + len;
         scan: while (--i >= off) {
-            int j = i + t.len;
-            while (--j >= i) {
-                if (data[this.off + j] != t.data[t.off + j]) {
+            int j = t.len;
+            while (--j >= 0) {
+                if (data[this.off + i + j] != t.data[t.off + j]) {
                     continue scan;
                 }
             }

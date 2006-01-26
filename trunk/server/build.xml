@@ -1,5 +1,5 @@
 <project name="femtocms" default="help">
-    <property name="version" value="0.4"/>
+    <property name="version" value="0.5"/>
     <path id="jars">
         <fileset dir="jar" includes="*.jar"/>
     </path>
@@ -42,6 +42,7 @@
         <jar jarfile="qu8ax-${version}.jar">
             <fileset dir="tmp">
                 <include name="de/mobizcorp/qu8ax/**"/>
+                <include name="de/mobizcorp/lib/**"/>
             </fileset>
             <fileset dir="src">
                 <include name="de/mobizcorp/qu8ax/**"/>
