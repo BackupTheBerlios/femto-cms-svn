@@ -5,6 +5,7 @@ body {
 
 body, td, th {
  font: normal 12px verdana,arial,helvetica,sans-serif;
+ padding: 2px;
 }
 
 img { border: none }

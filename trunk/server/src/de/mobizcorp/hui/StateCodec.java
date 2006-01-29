@@ -18,14 +18,12 @@
  */
 package de.mobizcorp.hui;
 
-import java.io.FileInputStream;
 import java.io.FilterOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
- * Base 64 Encoding with URL and Filename Safe Alphabet as defined by RFC 3548.
+ * Base 64 encoding with URL and filename safe alphabet as defined by RFC 3548.
  * 
  * @author Copyright(C) 2005 Klaus Rennecke, all rights reserved.
  */
@@ -46,16 +44,21 @@ public class StateCodec extends FilterOutputStream {
      *            a character of base64 encoded data.
      */
     public static final int fromBase64(byte b) {
+        // 45-45:  b - ('-' - 62) | -17
+        // 48-57:  b - ('0' - 52) | -4
+        // 65-90:  b - ('A' - 0)  | 65
+        // 95-95:  b - ('_' - 63  | 32
+        // 97-122: b - ('a' - 26) | 71
         return (b - (b < 48 ? -17 : (b < 65 ? -4 : (b < 95 ? 65 : (b < 97 ? 32
                 : 71)))));
     }
-    
+
     public static final byte[] fromBase64(final byte[] data) {
         byte[] result = new byte[(data.length * 6) / 8];
         int bits = 0, reg = 0, j = 0;
         for (int i = 0; i < data.length; i++) {
             final byte b = data[i];
-            if (48 <= b && b <= 122) {
+            if (45 <= b && b <= 122) {
                 reg = reg << 6 | fromBase64(b);
                 bits += 6;
                 while (bits >= 8) {
@@ -66,30 +69,14 @@ public class StateCodec extends FilterOutputStream {
         }
         return result;
     }
-    
-    public static void main(String args[]) {
-        try {
-            final InputStream in;
-            if (args.length > 0) {
-                in = new FileInputStream(args[0]);
-            } else {
-                in = System.in;
-            }
-            int n;
-            final byte[] buffer = new byte[8192];
-            final StateCodec codec = new StateCodec(System.out);
-            while ((n = in.read(buffer)) != -1) {
-                if (n > 0) {
-                    codec.write(buffer, 0, n);
-                }
-            }
-            codec.flush();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
+    /** Encode 6 bits from n to base64 byte. */
     public static final byte toBase64(int n) {
+        // 00-25: n + 'A'      | 65
+        // 26-51: n + 'a' - 26 | 71
+        // 52-61: n + '0' - 52 | -4
+        // 62-62: n + '-' - 62 | -17
+        // 63-63: n + '_' - 63 | 32
         return (byte) ((n < 26 ? 65 : (n < 52 ? 71 : (n < 62 ? -4
                 : (n < 63 ? -17 : 32)))) + n);
     }
@@ -139,7 +126,7 @@ public class StateCodec extends FilterOutputStream {
     public void flush() throws IOException {
         int bits = bitsLeft();
         if (bits > 0) {
-            super.write(toBase64((rest << (6 - bits)) & 0x3f));
+            out.write(toBase64((rest << (6 - bits)) & 0x3f));
             rest = 1;
         }
         super.flush();
@@ -148,7 +135,8 @@ public class StateCodec extends FilterOutputStream {
     @Override
     public void write(byte[] data, int off, int len) throws IOException {
         final int end = off + len;
-        int bits = bitsLeft(), reg = rest;
+        int bits = bitsLeft();
+        int reg = rest;
         for (int i = off; i < end; i++) {
             reg = reg << 8 | (data[i] & 0xff);
             bits += 8;
@@ -163,12 +151,13 @@ public class StateCodec extends FilterOutputStream {
 
     @Override
     public void write(int b) throws IOException {
-        int bits = bitsLeft() + 8, reg = rest << 8 | (b & 0xff);
+        int bits = bitsLeft() + 8;
+        int reg = rest << 8 | (b & 0xff);
         do {
             bits -= 6;
             out.write(toBase64((reg >>> bits) & 0x3f));
         } while (bits >= 6);
-        int mask = 1 << bits;
+        final int mask = 1 << bits;
         rest = (reg & (mask - 1)) | mask;
     }
 }

@@ -9,6 +9,7 @@ public class AllTests {
         TestSuite suite = new TestSuite("Test for de.mobizcorp.hui");
         //$JUnit-BEGIN$
         suite.addTestSuite(RFC2279Test.class);
+        suite.addTestSuite(StateCodecTest.class);
         //$JUnit-END$
         return suite;
     }
