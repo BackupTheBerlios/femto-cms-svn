@@ -21,10 +21,10 @@
         <delete file="femtocms-${version}.jar"/>
         <jar jarfile="femtocms-${version}.jar">
             <fileset dir="tmp">
-                <include name="de/mobizcorp/femtocms/**"/>
+                <include name="de/mobizcorp/**"/>
             </fileset>
             <fileset dir="src">
-                <include name="de/mobizcorp/femtocms/**"/>
+                <include name="de/mobizcorp/**"/>
                 <exclude name="**/*.java"/>
             </fileset>
         </jar>
@@ -56,7 +56,6 @@
             <fileset dir=".">
                 <include name="*.txt"/>
                 <include name="femtocms-*.sh"/>
-                <include name="*.cmd"/>
                 <include name="jar/*"/>
                 <include name="fck/*"/>
             </fileset>

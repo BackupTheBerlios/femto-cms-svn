@@ -3,7 +3,7 @@
   exclude-result-prefixes="femtocms">
   <!-- 
     femtocms minimalistic content management.
-    Copyright(C) 2005 mobizcorp Europe Ltd., all rights reserved.
+    Copyright(C) 2005-2006 mobizcorp Europe Ltd., all rights reserved.
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -49,7 +49,7 @@
   <xsl:template match="femtocms:footer">
     <hr noshade="noshade" size="1" style="margin: 0px;"/>
     <p style="font: 8pt sans-serif; text-align: center; margin: 0px;">
-      Powered by femtocms, version 0.3.
+      Powered by femtocms, version <xsl:value-of select="femtocms:version($femtocms-engine)"/>.
       Last modified: <xsl:value-of select="femtocms:modified($femtocms-engine)"/>
     </p>
   </xsl:template>

@@ -1,6 +1,6 @@
 /*
  * femtocms minimalistic content management.
- * Copyright(C) 2005 mobizcorp Europe Ltd., all rights reserved.
+ * Copyright(C) 2005-2006 mobizcorp Europe Ltd., all rights reserved.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -27,6 +27,7 @@ import static de.mobizcorp.femtocms.prefs.ServerPreferences.WRITE_AUTH_PREFERENC
 import static de.mobizcorp.femtocms.prefs.ServerPreferences.getString;
 
 import java.io.File;
+import java.io.IOException;
 import java.security.AccessControlException;
 import java.security.Principal;
 import java.util.logging.Level;
@@ -42,7 +43,7 @@ import de.mobizcorp.femtocms.engine.EditEngine;
 import de.mobizcorp.femtocms.engine.ViewEngine;
 
 /**
- * @author Copyright(C) 2005 mobizcorp Europe Ltd., all rights reserved.
+ * @author Copyright(C) 2005-2006 mobizcorp Europe Ltd., all rights reserved.
  */
 public class RepositorySelector extends BasicResource {
 
@@ -65,12 +66,12 @@ public class RepositorySelector extends BasicResource {
     private static final Pattern writeAuth = createPattern(getString(
             WRITE_AUTH_PREFERENCE, WRITE_AUTH_FALLBACK));
 
-    public RepositorySelector(Context context) {
+    public RepositorySelector(Context context) throws IOException {
         super(context);
         init(context);
     }
 
-    private void init(Context ctx) {
+    private void init(Context ctx) throws IOException {
         File base = new File(ctx.getBasePath());
         EditEngine edit = new EditEngine(base);
         this.editMount = new RepositoryMount(ctx, edit);

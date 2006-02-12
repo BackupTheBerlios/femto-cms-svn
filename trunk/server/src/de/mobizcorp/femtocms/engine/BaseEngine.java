@@ -1,6 +1,6 @@
 /*
  * femtocms minimalistic content management.
- * Copyright(C) 2005 mobizcorp Europe Ltd., all rights reserved.
+ * Copyright(C) 2005-2006 mobizcorp Europe Ltd., all rights reserved.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -29,8 +29,10 @@ import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+import de.mobizcorp.femtocms.prefs.ServerPreferences;
+
 /**
- * @author Copyright(C) 2005 mobizcorp Europe Ltd., all rights reserved.
+ * @author Copyright(C) 2005-2006 mobizcorp Europe Ltd., all rights reserved.
  */
 public abstract class BaseEngine implements EntityResolver {
     public static String modified(Object engine) {
@@ -66,5 +68,13 @@ public abstract class BaseEngine implements EntityResolver {
         } catch (TransformerException e) {
             throw new SAXException(e);
         }
+    }
+    
+    public static String version(Object engine) {
+        return ServerPreferences.FCM_VERSION;
+    }
+    
+    public final String version() {
+        return ServerPreferences.FCM_VERSION;
     }
 }

@@ -23,6 +23,7 @@ import static de.mobizcorp.femtocms.prefs.ServerPreferences.ROOT_MOUNT_PREFERENC
 import static de.mobizcorp.femtocms.prefs.ServerPreferences.getString;
 
 import java.io.File;
+import java.io.IOException;
 
 import simple.http.ProtocolHandler;
 import simple.http.Request;
@@ -37,15 +38,15 @@ public class RepositoryHandler implements ProtocolHandler {
 
     private final RepositorySelector selector;
 
-    public RepositoryHandler(Context ctx) {
+    public RepositoryHandler(Context ctx) throws IOException {
         this.selector = new RepositorySelector(ctx);
     }
 
-    public RepositoryHandler(String base) {
+    public RepositoryHandler(String base) throws IOException {
         this(new FileContext(new File(base)));
     }
 
-    public RepositoryHandler() {
+    public RepositoryHandler() throws IOException {
         this(getString(ROOT_MOUNT_PREFERENCE, ROOT_MOUNT_FALLBACK));
     }
 

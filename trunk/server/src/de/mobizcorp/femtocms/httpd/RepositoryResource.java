@@ -61,8 +61,11 @@ public abstract class RepositoryResource extends BasicResource implements
     @Override
     protected void process(Request req, Response resp, Report report)
             throws Exception {
-        Logger.getLogger("de.mobizcorp.femtocms.httpd").warning(
-                report.getText() + " " + report.getCause());
+        if (report.getCode() != 304) {
+            // Do not complain for not modified reports.
+            Logger.getLogger("de.mobizcorp.femtocms.httpd").warning(
+                    report.getText() + " " + report.getCause());
+        }
         super.process(req, resp, report);
     }
 }

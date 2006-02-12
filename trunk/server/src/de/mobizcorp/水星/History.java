@@ -32,77 +32,75 @@ import de.mobizcorp.lib.Text;
  * @author Copyright(C) 2006 Klaus Rennecke, all rights reserved.
  */
 public class History {
-	private static final byte[] EMPTY = new byte[0];
+    private static final byte[] EMPTY = new byte[0];
 
-	private final File chunks;
+    private final File chunks;
 
-	private RandomAccessFile dataFile;
+    private RandomAccessFile dataFile;
 
-	private final Index index;
+    private final Index index;
 
-	public History(File base) throws IOException {
-		this(new File(base, "00changelog.i"), new File(base, "00changelog.d"));
-	}
+    protected History(final File index, final File chunks) throws IOException {
+        this.index = new Index(index, "r");
+        this.chunks = chunks;
+    }
 
-	protected History(final File index, final File chunks) throws IOException {
-		this.index = new Index(index, "r");
-		this.chunks = chunks;
-	}
-
-	public byte[] chunk(int g) throws IOException, DataFormatException {
+    public byte[] chunk(int g) throws IOException {
         final Index.Entry entry = index.get(g);
-		byte[] buffer = new byte[entry.length];
-		if (dataFile == null) {
-			dataFile = new RandomAccessFile(chunks, "r");
-		}
-		dataFile.seek(entry.offset);
-		dataFile.readFully(buffer);
-		return Store.decompress(buffer);
-	}
+        byte[] buffer = new byte[entry.length];
+        if (dataFile == null) {
+            dataFile = new RandomAccessFile(chunks, "r");
+        }
+        dataFile.seek(entry.offset);
+        dataFile.readFully(buffer);
+        try {
+            return Store.decompress(buffer);
+        } catch (DataFormatException e) {
+            throw new IOException("failed to decompress: " + e);
+        }
+    }
 
-	public byte[] contents(Version version) throws IOException,
-			DataFormatException {
-		if (Version.NULL == version) {
-			return EMPTY;
-		}
-		final int g = index.generation(version);
-		final int base = index.base(g);
-		final byte[] orig = chunk(base);
-		if (base == g) {
-			return orig;
-		}
-		byte[][] bins = new byte[g - base][];
-		for (int r = base + 1, j = 0; r <= g; r++) {
-			bins[j++] = chunk(r);
-		}
-		byte[] text = Patch.patches(orig, bins);
-		if (index.check(text, g)) {
-			return text;
-		}
-		throw new IOException("integrity check failed on " + chunks + ":" + g);
-	}
+    public byte[] contents(Version version) throws IOException {
+        if (Version.NULL == version) {
+            return EMPTY;
+        }
+        final int g = index.generation(version);
+        final int base = index.base(g);
+        final byte[] orig = chunk(base);
+        if (base == g) {
+            return orig;
+        }
+        byte[][] bins = new byte[g - base][];
+        for (int r = base + 1, j = 0; r <= g; r++) {
+            bins[j++] = chunk(r);
+        }
+        byte[] text = Patch.patches(orig, bins);
+        if (index.check(text, g)) {
+            return text;
+        }
+        throw new IOException("integrity check failed on " + chunks + ":" + g);
+    }
 
-	public byte[] delta(Version version) throws IOException,
-			DataFormatException {
-		int g = index.generation(version);
-		int b = index.base(g);
-		return g != b ? chunk(g) : Diff.bdiff(contents(index.version(g - 1)),
-				contents(version));
-	}
+    public byte[] delta(Version version) throws IOException {
+        int g = index.generation(version);
+        int b = index.base(g);
+        return g != b ? chunk(g) : Diff.bdiff(contents(index.version(g - 1)),
+                contents(version));
+    }
 
-	public int generation(Version v) {
-		return index.generation(v);
-	}
+    public int generation(Version v) {
+        return index.generation(v);
+    }
 
-	public List<Version> heads() {
-		return index.heads();
-	}
+    public List<Version> heads() {
+        return index.heads();
+    }
 
-	public Version lookup(Text key) {
-		return index.lookup(key);
-	}
+    public Version lookup(Text key) {
+        return index.lookup(key);
+    }
 
-	public Version tip() {
-		return index.tip();
-	}
+    public Version tip() {
+        return index.tip();
+    }
 }

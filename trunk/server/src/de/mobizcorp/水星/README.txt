@@ -13,9 +13,10 @@ Mercurial is Copyright (C) 2005 Matt Mackall <mpm@selenic.com>.
 
 Some terms have been replaced thoughout the sources. Here are the respective
 translations to Mercurial nomenclature.
+ * Changes ^= changelog
  * Element ^= filelog
  * Generation ^= revision
- * History ^= changelog
+ * History ^= revlog
  * Store ^= localrepo
  * Undo ^= transaction
  * Version ^= node

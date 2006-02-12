@@ -1,6 +1,6 @@
 /*
  * femtocms minimalistic content management.
- * Copyright(C) 2005 mobizcorp Europe Ltd., all rights reserved.
+ * Copyright(C) 2005-2006 mobizcorp Europe Ltd., all rights reserved.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,18 +21,18 @@ package de.mobizcorp.femtocms.prefs;
 import java.util.prefs.Preferences;
 
 /**
- * @author Copyright(C) 2005 mobizcorp Europe Ltd., all rights reserved.
+ * @author Copyright(C) 2005-2006 mobizcorp Europe Ltd., all rights reserved.
  */
 public class ServerPreferences {
 
-    public static final String FCM_VERSION = "0.3";
+    public static final String FCM_VERSION = "0.5";
 
     /**
-     * The server identification string. Default: "femtocms/0.3".
+     * The server identification string. Default: "femtocms/<var>version</var>".
      */
     public static final String FCM_SERVER_PREFERENCE = "server.id";
 
-    public static final String FCM_SERVER_FALLBACK = "femtocms/0.3";
+    public static final String FCM_SERVER_FALLBACK = "femtocms/" + FCM_VERSION;
 
     /**
      * The size of the output buffer, to enable high TCP throughput. Default:
