@@ -18,10 +18,16 @@
  */
 package de.mobizcorp.femtocms.engine;
 
+import static de.mobizcorp.femtocms.prefs.ServerPreferences.RESOURCE_CACHE_FALLBACK;
+import static de.mobizcorp.femtocms.prefs.ServerPreferences.RESOURCE_CACHE_PREFERENCE;
+import static de.mobizcorp.femtocms.prefs.ServerPreferences.TEMPLATE_CACHE_FALLBACK;
+import static de.mobizcorp.femtocms.prefs.ServerPreferences.TEMPLATE_CACHE_PREFERENCE;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLDecoder;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -31,8 +37,9 @@ import javax.xml.transform.Templates;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 
-import simple.util.cache.Cache;
+import de.mobizcorp.femtocms.prefs.ServerPreferences;
 import de.mobizcorp.lib.Text;
+import de.mobizcorp.lib.TwoQueueCache;
 import de.mobizcorp.水星.Changes;
 import de.mobizcorp.水星.Store;
 import de.mobizcorp.水星.Version;
@@ -53,7 +60,9 @@ public class ViewEngine extends NullEngine {
 
     private long tipLastModified;
 
-    private final Cache templateCache;
+    private final TwoQueueCache<String, Templates> templateCache;
+
+    private final TwoQueueCache<Version, byte[]> resourceCache;
 
     private final Store store;
 
@@ -68,7 +77,12 @@ public class ViewEngine extends NullEngine {
     public ViewEngine(File base) throws IOException {
         super(base);
         this.store = new Store(Store.findBase(base));
-        this.templateCache = new Cache();
+        this.templateCache = new TwoQueueCache<String, Templates>(
+                ServerPreferences.getInt(TEMPLATE_CACHE_PREFERENCE,
+                        TEMPLATE_CACHE_FALLBACK));
+        this.resourceCache = new TwoQueueCache<Version, byte[]>(
+                ServerPreferences.getInt(RESOURCE_CACHE_PREFERENCE,
+                        RESOURCE_CACHE_FALLBACK));
         this.dirty = true;
     }
 
@@ -88,12 +102,16 @@ public class ViewEngine extends NullEngine {
 
     @Override
     protected StreamResource createStreamSource(String href) throws IOException {
-        final Text path = Text.valueOf(href);
+        final Text path = Text.valueOf(URLDecoder.decode(href, "UTF-8"));
         final Entry entry = getManifest().get(path);
         if (entry == null) {
             return super.createStreamSource(href);
         }
-        final byte[] data = store.file(path).read(entry.version);
+        byte[] data = resourceCache.get(entry.version);
+        if (data == null) {
+            data = store.file(path).read(entry.version);
+            resourceCache.put(entry.version, data);
+        }
         StreamResource result = new StreamResource();
         result.setLastModified(tipLastModified);
         result.setSystemId(baseUri.resolve(URI.create(href)).toString());
@@ -153,12 +171,12 @@ public class ViewEngine extends NullEngine {
 
     @Override
     protected Templates newTemplates(String style) throws TransformerException {
-        Templates templates = (Templates) templateCache.lookup(style);
+        Templates templates = (Templates) templateCache.get(style);
         if (templates != null) {
             return templates;
         }
         templates = super.newTemplates(style);
-        templateCache.cache(style, templates);
+        templateCache.put(style, templates);
         return templates;
     }
 

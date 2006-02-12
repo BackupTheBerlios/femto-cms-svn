@@ -115,12 +115,26 @@ public class ServerPreferences {
     public static final String OUTPUT_CHARSET_FALLBACK = "UTF-8";
 
     /**
+     * The size of the resource cache. Default: 40.
+     */
+    public static final String RESOURCE_CACHE_PREFERENCE = "resource.cache";
+
+    public static final int RESOURCE_CACHE_FALLBACK = 40;
+
+    /**
      * This is the key store type list, comma separated. Default:
      * "PKCS12,JKS,JCEKS".
      */
     public static final String STORE_TYPE_PREFERENCE = "store.type";
 
     public static final String STORE_TYPE_FALLBACK = "PKCS12,JKS,JCEKS";
+
+    /**
+     * The size of the template cache. Default: 10.
+     */
+    public static final String TEMPLATE_CACHE_PREFERENCE = "template.cache";
+
+    public static final int TEMPLATE_CACHE_FALLBACK = 10;
 
     /**
      * A regular expression that must match against the distinguished name of
