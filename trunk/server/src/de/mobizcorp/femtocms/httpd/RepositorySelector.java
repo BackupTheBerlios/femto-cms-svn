@@ -84,8 +84,8 @@ public class RepositorySelector extends BasicResource {
     protected void process(Request request, Response response) throws Exception {
         response.set("Server", serverId);
         String uri = request.getURI();
-        if (logger.isLoggable(Level.INFO)) {
-            logger.log(Level.INFO, logRequest, new Object[] {
+        if (logger.isLoggable(Level.FINE)) {
+            logger.log(Level.FINE, logRequest, new Object[] {
                     request.getInetAddress(), request.getMethod(), uri });
         }
         try {

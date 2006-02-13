@@ -27,7 +27,6 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.net.URLDecoder;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -89,7 +88,7 @@ public class ViewEngine extends NullEngine {
     @Override
     public long getLastModified(String href) {
         try {
-            Text path = Text.valueOf(relativize(this.baseUri, new URI(href)));
+            Text path = Text.urlDecode(relativize(this.baseUri, new URI(href)));
             if (isInManifest(path)) {
                 return tipLastModified;
             } else {
@@ -102,7 +101,7 @@ public class ViewEngine extends NullEngine {
 
     @Override
     protected StreamResource createStreamSource(String href) throws IOException {
-        final Text path = Text.valueOf(URLDecoder.decode(href, "UTF-8"));
+        final Text path = Text.urlDecode(href);
         final Entry entry = getManifest().get(path);
         if (entry == null) {
             return super.createStreamSource(href);

@@ -21,7 +21,9 @@ package de.mobizcorp.femtocms.engine;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URLDecoder;
 
 import javax.xml.transform.sax.TransformerHandler;
 
@@ -32,6 +34,14 @@ public class EditEngine extends NullEngine {
     // This is a dot because a type cannot contain a dot.
     public static final String FCM_SAVE_TYPE = ".";
 
+    private static String toPath(String href) {
+        try {
+            return URLDecoder.decode(trimPath(href), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new UnsupportedOperationException(e.toString());
+        }
+    }
+
     public EditEngine(File base) {
         super(base);
         methods.put("html", "femtocms:/edit.xsl");
@@ -40,7 +50,7 @@ public class EditEngine extends NullEngine {
 
     @Override
     protected StreamResource createStreamSource(String href) throws IOException {
-        File fetch = new File(base, href);
+        File fetch = new File(base, toPath(href));
         if (fetch.exists()) {
             StreamResource result = new StreamResource();
             result.setLastModified(fetch.lastModified());
@@ -50,11 +60,11 @@ public class EditEngine extends NullEngine {
         }
         return super.createStreamSource(href);
     }
-
+    
     @Override
     public long getLastModified(String href) {
         try {
-            String path = relativize(this.baseUri, new URI(href));
+            String path = toPath(relativize(this.baseUri, new URI(href)));
             if (path.startsWith("preview:")) {
                 path = path.substring(8);
             }

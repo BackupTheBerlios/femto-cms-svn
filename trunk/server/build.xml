@@ -1,7 +1,7 @@
 <project name="femtocms" default="help">
-    <property name="version" value="0.5"/>
+    <property name="version" value="0.5" />
     <path id="jars">
-        <fileset dir="jar" includes="*.jar"/>
+        <fileset dir="jar" includes="*.jar" />
     </path>
     <target name="help">
         <echo>clean: clean up tmp directory.</echo>
@@ -10,57 +10,61 @@
         <echo>bundle: bundle into zip.</echo>
     </target>
     <target name="clean">
-        <delete dir="tmp"/>
+        <delete dir="tmp" />
     </target>
     <target name="compile">
-        <mkdir dir="tmp"/>
-        <javac srcdir="src" destdir="tmp" optimize="true" debug="true"
-            classpathref="jars"/>
+        <mkdir dir="tmp" />
+        <javac srcdir="src"
+               destdir="tmp"
+               encoding="UTF-8"
+               optimize="true"
+               debug="true"
+               classpathref="jars" />
     </target>
     <target name="jar" depends="compile">
-        <delete file="femtocms-${version}.jar"/>
+        <delete file="femtocms-${version}.jar" />
         <jar jarfile="femtocms-${version}.jar">
             <fileset dir="tmp">
-                <include name="de/mobizcorp/**"/>
+                <include name="de/mobizcorp/**" />
             </fileset>
             <fileset dir="src">
-                <include name="de/mobizcorp/**"/>
-                <exclude name="**/*.java"/>
+                <include name="de/mobizcorp/**" />
+                <exclude name="**/*.java" />
             </fileset>
         </jar>
-        <delete file="hui-${version}.jar"/>
+        <delete file="hui-${version}.jar" />
         <jar jarfile="hui-${version}.jar">
             <fileset dir="tmp">
-                <include name="de/mobizcorp/hui/**"/>
+                <include name="de/mobizcorp/hui/**" />
             </fileset>
             <fileset dir="src">
-                <include name="de/mobizcorp/hui/**"/>
-                <exclude name="**/*.java"/>
+                <include name="de/mobizcorp/hui/**" />
+                <exclude name="**/*.java" />
             </fileset>
         </jar>
-        <delete file="qu8ax-${version}.jar"/>
+        <delete file="qu8ax-${version}.jar" />
         <jar jarfile="qu8ax-${version}.jar">
             <fileset dir="tmp">
-                <include name="de/mobizcorp/qu8ax/**"/>
-                <include name="de/mobizcorp/lib/**"/>
+                <include name="de/mobizcorp/qu8ax/**" />
+                <include name="de/mobizcorp/lib/**" />
             </fileset>
             <fileset dir="src">
-                <include name="de/mobizcorp/qu8ax/**"/>
-                <exclude name="**/*.java"/>
+                <include name="de/mobizcorp/qu8ax/**" />
+                <exclude name="**/*.java" />
             </fileset>
         </jar>
     </target>
     <target name="bundle" depends="clean,jar">
-        <delete file="femtocms-${version}-bundle.zip"/>
+        <delete file="femtocms-${version}-bundle.zip" />
         <zip zipfile="femtocms-${version}-bundle.zip">
             <fileset dir=".">
-                <include name="*.txt"/>
-                <include name="femtocms-*.sh"/>
-                <include name="jar/*"/>
-                <include name="fck/*"/>
+                <include name="*.txt" />
+                <include name="femtocms-*.sh" />
+                <include name="jar/*" />
+                <include name="fck/*" />
             </fileset>
             <zipfileset dir="." prefix="jar/">
-                <include name="femtocms-${version}.jar"/>
+                <include name="femtocms-${version}.jar" />
             </zipfileset>
         </zip>
     </target>

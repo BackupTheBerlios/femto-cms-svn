@@ -127,6 +127,90 @@ public final class Text implements TextSequence {
             }
     }
 
+    public static int toDigit(int b, int radix) {
+        final int v;
+        if (48 <= b && b <= 57) {
+            v = b - 48;
+        } else if (65 <= b && b <= 90) {
+            v = b - 55;
+        } else if (97 <= b && b <= 122) {
+            v = b - 87;
+        } else {
+            throw new NumberFormatException("invalid character: " + (char) b);
+        }
+        if (v < radix) {
+            return v;
+        } else {
+            throw new NumberFormatException("invalid digit: " + v
+                    + " for radix " + radix);
+        }
+    }
+
+    public static Text urlDecode(String str) {
+        int pos = -1, count = 0;
+        final int length = str.length();
+        while ((pos = str.indexOf('%', pos + 1)) != -1) {
+            if (pos < length - 2) {
+                count += 1;
+            } else {
+                throw new IllegalArgumentException("truncated URL escape: '"
+                        + str + "'");
+            }
+        }
+        if (count == 0) {
+            return valueOf(str);
+        }
+        pos = 0;
+        final byte[] data = new byte[length - (count * 2)];
+        for (int i = 0; i < length; i++) {
+            int c = str.charAt(i);
+            if (c == '%' && i < length - 2) {
+                c = toDigit(str.charAt(++i), 16);
+                c = c * 16 + toDigit(str.charAt(++i), 16);
+            }
+            if (c > 255) {
+                throw new IllegalArgumentException("invalid character in url: "
+                        + c);
+            }
+            data[pos++] = (byte) c;
+        }
+        return new Text(data, 0, data.length);
+    }
+
+    public static Text urlDecode(Text txt) {
+        int pos = -1, count = 0;
+        final int length = txt.size();
+        while ((pos = txt.indexOf('%', pos + 1)) != -1) {
+            if (pos < length - 2) {
+                count += 1;
+            } else {
+                throw new IllegalArgumentException("truncated URL escape: '"
+                        + txt + "'");
+            }
+        }
+        if (count == 0) {
+            return txt;
+        }
+        pos = 0;
+        final int txtOff = txt.off;
+        final byte[] txtData = txt.data;
+        final int txtEnd = txtOff + length;
+        final byte[] data = new byte[length - (count * 2)];
+        for (int i = txt.off; i < txtEnd; i++) {
+            int c = txtData[i];
+            if (c == '%' && i < txtEnd - 2) {
+                c = toDigit(txt.data[++i], 16);
+                c = c * 16 + toDigit(txt.data[++i], 16);
+            }
+            if (c > 255) {
+                throw new IllegalArgumentException("invalid character in url: "
+                        + c);
+            }
+            data[pos++] = (byte) c;
+        }
+        return new Text(data, 0, data.length);
+    }
+
     public static Text valueOf(byte[] data, int off, int len) {
         byte[] copy = new byte[len];
         System.arraycopy(data, off, copy, 0, len);
@@ -395,24 +479,7 @@ public final class Text implements TextSequence {
             sign = -1;
         }
         for (; i < end; i++) {
-            final byte b = data[i];
-            final int v;
-            if (48 <= b && b <= 57) {
-                v = b - 48;
-            } else if (65 <= b && b <= 90) {
-                v = b - 55;
-            } else if (97 <= b && b <= 122) {
-                v = b - 87;
-            } else {
-                throw new NumberFormatException("invalid character: "
-                        + (char) b);
-            }
-            if (v < radix) {
-                n = n * radix - v;
-            } else {
-                throw new NumberFormatException("invalid digit: " + v
-                        + " for radix " + radix);
-            }
+            n = n * radix - toDigit(data[i], radix);
         }
         return n * sign;
     }

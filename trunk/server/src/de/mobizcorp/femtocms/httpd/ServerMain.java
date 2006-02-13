@@ -34,6 +34,7 @@ import static de.mobizcorp.femtocms.prefs.ServerPreferences.STORE_TYPE_PREFERENC
 import static de.mobizcorp.femtocms.prefs.ServerPreferences.getInt;
 import static de.mobizcorp.femtocms.prefs.ServerPreferences.getString;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -74,7 +75,8 @@ public class ServerMain {
             int httpsPort = getInt(HTTPS_PORT_PREFERENCE, HTTPS_PORT_FALLBACK);
             String httpsCert = getString(HTTPS_CERT_PREFERENCE,
                     HTTPS_CERT_FALLBACK);
-            if (httpsPort > 0 && httpsCert != null) {
+            if (httpsPort > 0 && httpsCert != null
+                    && new File(httpsCert).isFile()) {
                 KeyStore store;
                 char[] httpsPass = toChars(getString(HTTPS_PASS_PREFERENCE,
                         HTTPS_PASS_FALLBACK));
