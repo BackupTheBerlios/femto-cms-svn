@@ -50,7 +50,7 @@ public class MiniServer extends Thread {
             'S', 'T' });
 
     private static final Text HTTP_REDIRECT1 = Text
-            .valueOf("HTTP/1.0 302 Found\r\nLocation: ");
+            .valueOf("HTTP/1.0 302 Found\r\nLocation: /");
 
     private static final Text HTTP_REDIRECT2 = Text.constant(new byte[] { '\r',
             '\n', '\r', '\n' });

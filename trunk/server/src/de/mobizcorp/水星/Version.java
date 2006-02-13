@@ -27,6 +27,7 @@ import java.security.NoSuchAlgorithmException;
 
 import de.mobizcorp.lib.FNV1aHash;
 import de.mobizcorp.lib.Text;
+import de.mobizcorp.lib.TextBuffer;
 
 /**
  * Version abstraction, serves as identifiers for versions.
@@ -243,5 +244,15 @@ public final class Version {
 	public String toString() {
 		return hex(id);
 	}
+    
+    public Text toText() {
+        final int end = id.length;
+        TextBuffer buffer = new TextBuffer(end * 2);
+        for (int i = 0; i < end; i++) {
+            int b = id[i];
+            buffer.append(digit((b >>> 4) & 15)).append(digit(b & 15));
+        }
+        return buffer.toText();
+    }
 
 }

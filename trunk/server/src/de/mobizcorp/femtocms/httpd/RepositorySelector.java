@@ -51,11 +51,15 @@ public class RepositorySelector extends BasicResource {
 
     protected static final String FCM_PREVIEW = "/preview:";
 
+    protected static final String FCM_BROWSER = "/browser:";
+
     private Resource editMount;
 
     private Resource saveMount;
 
     private Resource viewMount;
+
+    private Resource browser;
 
     private static final String logRequest = getString(LOG_REQUEST_PREFERENCE,
             LOG_REQUEST_FALLBACK);
@@ -78,6 +82,7 @@ public class RepositorySelector extends BasicResource {
         this.saveMount = new RepositoryWriter(ctx, edit);
         ViewEngine view = new ViewEngine(base);
         this.viewMount = new RepositoryMount(ctx, view);
+        this.browser = new RepositoryBrowser(ctx);
     }
 
     @Override
@@ -97,6 +102,9 @@ public class RepositorySelector extends BasicResource {
                     request.setURI(uri.substring(FCM_PREVIEW.length()));
                     editMount.handle(request, response);
                 }
+            } else if (uri.startsWith(FCM_BROWSER)) {
+                request.setURI(uri.substring(FCM_PREVIEW.length()));
+                browser.handle(request, response);
             } else {
                 viewMount.handle(request, response);
             }

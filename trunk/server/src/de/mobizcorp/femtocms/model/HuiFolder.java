@@ -51,7 +51,8 @@ public class HuiFolder extends HuiNode implements ActionHandler,
     private static final Text HTML_DIV11, HTML_DIV12, HTML_DIV13, HTML_DIV2,
             HTML_DIV3;
 
-    private static final Text ID_CONTENTS, ID_DIR, ID_FILENAME, ID_HISTORY, ID_LOCATION;
+    private static final Text ID_CONTENTS, ID_DIR, ID_FILENAME, ID_HISTORY,
+            ID_LOCATION;
 
     private static final Text PATH_SEPARATOR = Text.constant((byte) '/',
             (byte) '\\');
@@ -74,11 +75,13 @@ public class HuiFolder extends HuiNode implements ActionHandler,
         ID_LOCATION = list.next();
     }
 
+    private static File base = new File(System.getProperty("user.dir", "."));
+
     private transient boolean dirty = true;
 
     private Text file = Text.EMPTY;
 
-    private Text path = Text.valueOf(System.getProperty("user.dir", "."));
+    private Text path = Text.EMPTY;
 
     public HuiFolder() {
     }
@@ -97,7 +100,7 @@ public class HuiFolder extends HuiNode implements ActionHandler,
                 + "'");
         if (name.equals(ACTION_OPEN)) {
             final HuiFolder self = (HuiFolder) path.getParent(context);
-            final File current = new File(self.path.toString());
+            final File current = new File(base, self.path.toString());
             final Text elem = ((HuiLabel) context).getText();
             if (elem.equals(ACTION___)) {
                 final File parent = current.getParentFile();
@@ -151,6 +154,10 @@ public class HuiFolder extends HuiNode implements ActionHandler,
         }
     }
 
+    public static File getBase() {
+        return HuiFolder.base;
+    }
+
     /**
      * @return Returns the file.
      */
@@ -184,24 +191,25 @@ public class HuiFolder extends HuiNode implements ActionHandler,
         super.refresh(root);
     }
 
-    private void refreshHistory(HuiNode root) {
-        final HuiHistory history = (HuiHistory) root.find(ID_HISTORY);
-        history.setFolder(getPath());
-        history.setFile(getFile());
-    }
-
     private void refreshEditor(final HuiNode root) {
+        File folder = new File(base, path.toString());
         final Text fileName = file.size() == 0 ? Text.EMPTY : Text
-                .valueOf(new File(path.toString(), file.toString()).getPath());
+                .valueOf(new File(folder, file.toString()).getPath());
         final HuiEditor editor = (HuiEditor) root.find(ID_CONTENTS);
         final HuiLabel label = (HuiLabel) root.find(ID_FILENAME);
         editor.setCurrent(fileName);
         label.setText(fileName);
     }
 
+    private void refreshHistory(HuiNode root) {
+        final HuiHistory history = (HuiHistory) root.find(ID_HISTORY);
+        history.setFolder(getPath());
+        history.setFile(getFile());
+    }
+
     private void refreshList() {
         removeAll();
-        final File dir = new File(path.toString());
+        final File dir = new File(base, path.toString());
         if (dir.exists() && dir.isDirectory()) {
             addLink(ACTION___, true);
             final File[] files = sort(dir.listFiles());
@@ -249,6 +257,10 @@ public class HuiFolder extends HuiNode implements ActionHandler,
     public void saveState(OutputStream out) throws IOException {
         saveText(getPath(), out);
         saveText(getFile(), out);
+    }
+
+    public static void setBase(File base) {
+        HuiFolder.base = base;
     }
 
     private final void setDirty(boolean dirty) {

@@ -18,6 +18,8 @@
  */
 package de.mobizcorp.femtocms.model;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,10 +27,11 @@ import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 
 import de.mobizcorp.hui.HuiText;
-import de.mobizcorp.lib.ErrorStreamLogger;
-import de.mobizcorp.lib.InputStreamEater;
 import de.mobizcorp.lib.Text;
 import de.mobizcorp.lib.TextBuffer;
+import de.mobizcorp.水星.Changes;
+import de.mobizcorp.水星.Store;
+import de.mobizcorp.水星.Changes.LogEntry;
 
 /**
  * History pane for femtocms.
@@ -63,19 +66,15 @@ public class HuiHistory extends HuiText {
     protected void renderValue(OutputStream out) throws IOException {
         renderText(out, listHistory());
     }
-
-    private InputStream listHistory() throws IOException {
-        return execMercurial(new String[] { null, "log", file.toString()});
-    }
-
-    private InputStream execMercurial(String... args) throws IOException {
-        args[0] = "hg";// FIXME
-        ProcessBuilder builder = new ProcessBuilder(args).directory(new File(folder.toString()));
-        Process process = builder.start();
-        ErrorStreamLogger.attach(process);
-        return new InputStreamEater(process);
-    }
     
+    private InputStream listHistory() throws IOException {
+        Changes changes = new Store(new File(folder.toString())).changes();
+        LogEntry entry = changes.read(changes.tip());
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        entry.writeTo(buffer);
+        return new ByteArrayInputStream(buffer.toByteArray());
+    }
+
     public final Text getFile() {
         return file;
     }

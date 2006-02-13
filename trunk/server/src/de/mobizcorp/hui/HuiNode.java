@@ -464,7 +464,6 @@ public abstract class HuiNode {
      */
     public void writeState(OutputStream out) throws IOException {
         refresh(this);
-        out.write('/');
         StateCodec codec = new StateCodec(out);
         saveState(codec);
         codec.flush();

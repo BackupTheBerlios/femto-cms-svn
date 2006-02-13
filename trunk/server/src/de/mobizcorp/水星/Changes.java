@@ -20,6 +20,8 @@ package de.mobizcorp.水星;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 
 import de.mobizcorp.lib.Text;
@@ -45,6 +47,8 @@ public class Changes extends History {
             return (long) (nixTime * 1000);
         }
 
+        public final Version changeset;
+
         public final Text[] files;
 
         public final Version manifest;
@@ -55,7 +59,11 @@ public class Changes extends History {
 
         public final Text user;
 
-        public LogEntry(final byte[] data) {
+        public final int generation;
+
+        public LogEntry(Version changeset, int generation, final byte[] data) {
+            this.changeset = changeset;
+            this.generation = generation;
             final Text text = Text.constant(data);
             final int mark = text.indexOf(_N_N) + 2;
             final TextParser tp = new TextParser(text.part(0, mark), Store.NL);
@@ -69,6 +77,27 @@ public class Changes extends History {
             this.files = buffer.toArray(new Text[buffer.size()]);
             this.message = text.part(mark, text.size() - mark);
         }
+        
+        public void writeTo(OutputStream out) throws IOException {
+            Text.valueOf("changeset:   ").writeTo(out);
+            Text.valueOf(generation, 10).writeTo(out);
+            out.write(':');
+            changeset.toText().writeTo(out);
+            Text.valueOf("\nuser:        ").writeTo(out);
+            user.writeTo(out);
+            Text.valueOf("\ndate:        ").writeTo(out);
+            Text.valueOf(new Timestamp(time).toString()).writeTo(out);
+            Text.valueOf("\nfiles:       ").writeTo(out);
+            for (int i = 0; i < files.length; i++) {
+                if (i > 0) {
+                    out.write(' ');
+                }
+                files[i].writeTo(out);
+            }
+            Text.valueOf("\ndescription:\n").writeTo(out);
+            message.writeTo(out);
+            out.write('\n');
+        }
     }
 
     private static final Text _N_N = Text.constant((byte) '\n', (byte) '\n');
@@ -78,6 +107,6 @@ public class Changes extends History {
     }
 
     public LogEntry read(Version version) throws IOException {
-        return new LogEntry(contents(version));
+        return new LogEntry(version, generation(version), contents(version));
     }
 }
