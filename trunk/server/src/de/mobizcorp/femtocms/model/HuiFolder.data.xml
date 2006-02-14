@@ -5,7 +5,7 @@
 <style type="text/css">
 #dir { height: 44em; width: 16em; overflow: scroll; }
 #dir div { width: 100%; background: rgb(240,240,240); margin: 1px; }
-#dir .button { text-align: left; border: none; }
+#dir .button { text-align: left; border: none; vertical-align: top; }
 #location { width: 100%; }
 #filename { font-size: 80%; align: right; }
 .folder .button { font-weight: bold; }

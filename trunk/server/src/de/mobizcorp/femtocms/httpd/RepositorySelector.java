@@ -103,6 +103,7 @@ public class RepositorySelector extends BasicResource {
                     editMount.handle(request, response);
                 }
             } else if (uri.startsWith(FCM_BROWSER)) {
+                authenticate(request);
                 request.setURI(uri.substring(FCM_PREVIEW.length()));
                 browser.handle(request, response);
             } else {

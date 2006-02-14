@@ -103,4 +103,8 @@ public class History {
     public Version tip() {
         return index.tip();
     }
+
+    public Version version(int g) {
+        return index.version(g);
+    }
 }

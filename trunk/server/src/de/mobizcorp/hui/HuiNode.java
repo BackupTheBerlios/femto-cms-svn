@@ -219,6 +219,17 @@ public abstract class HuiNode {
         }
         return null;
     }
+    
+    /**
+     * Commit changes that were posted in this request.
+     */
+    public void commit() {
+        HuiNode scan = getChild();
+        while (scan != null) {
+            scan.commit();
+            scan = scan.getSibling();
+        }
+    }
 
     /**
      * @return the first child of this node, or null.

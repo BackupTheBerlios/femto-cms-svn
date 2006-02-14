@@ -26,6 +26,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.logging.Logger;
 
 import de.mobizcorp.hui.ActionHandler;
 import de.mobizcorp.hui.HuiBuilder;
@@ -96,21 +97,23 @@ public class HuiFolder extends HuiNode implements ActionHandler,
 
     public void action(final Text name, final Path<HuiNode> path) {
         final HuiNode context = path.getLast();
-        System.out.println("action: '" + name + "' on '" + context.getId()
-                + "'");
         if (name.equals(ACTION_OPEN)) {
             final HuiFolder self = (HuiFolder) path.getParent(context);
             final File current = new File(base, self.path.toString());
             final Text elem = ((HuiLabel) context).getText();
             if (elem.equals(ACTION___)) {
                 final File parent = current.getParentFile();
-                if (parent != null) {
-                    self.setPath(Text.valueOf(parent.getPath()));
+                String newPath = relativize(base, parent);
+                if (newPath != null) {
+                    self.setPath(Text.valueOf(newPath));
                 }
             } else {
                 final File file = new File(current, elem.toString());
                 if (file.isDirectory()) {
-                    self.setPath(Text.valueOf(file.getPath()));
+                    String newPath = relativize(base, file);
+                    if (newPath != null) {
+                        self.setPath(Text.valueOf(newPath));
+                    }
                 } else {
                     self.setFile(elem);
                 }
@@ -133,6 +136,34 @@ public class HuiFolder extends HuiNode implements ActionHandler,
                     ID_CONTENTS);
             editor.saveValue();
         }
+    }
+
+    private static String relativize(File base, File child) {
+        if (base == null || child == null) {
+            return null;
+        }
+        String basePath = base.getPath();
+        String childPath = child.getPath();
+        if (childPath.equals(basePath)) {
+            return "";
+        } else if (childPath.startsWith(basePath)
+                && childPath.charAt(basePath.length()) == File.separatorChar) {
+            return childPath.substring(basePath.length() + 1);
+        }
+        try {
+            basePath = base.getCanonicalPath();
+            childPath = child.getCanonicalPath();
+            if (childPath.equals(basePath)) {
+                return "";
+            } else if (childPath.startsWith(basePath)
+                    && childPath.charAt(basePath.length()) == File.separatorChar) {
+                return childPath.substring(basePath.length() + 1);
+            }
+        } catch (IOException e) {
+            Logger.getLogger("de.mobizcorp").warning(
+                    "relativize failed: " + e.toString());
+        }
+        return null;
     }
 
     private void addLink(final Text name, final boolean folder) {
@@ -183,28 +214,35 @@ public class HuiFolder extends HuiNode implements ActionHandler,
     protected void refresh(final HuiNode root) {
         if (isDirty()) {
             setDirty(false);
+            final Text fileName;
+            if (file.size() == 0) {
+                fileName = Text.EMPTY;
+            } else if (path.size() == 0) {
+                fileName = file;
+            } else {
+                TextBuffer buffer = new TextBuffer(path.size() + 1
+                        + file.size());
+                fileName = buffer.append(path).append('/').append(file)
+                        .toText();
+            }
             refreshList();
             refreshPath(root);
-            refreshEditor(root);
-            refreshHistory(root);
+            refreshEditor(root, fileName);
+            refreshHistory(root, fileName);
         }
         super.refresh(root);
     }
 
-    private void refreshEditor(final HuiNode root) {
-        File folder = new File(base, path.toString());
-        final Text fileName = file.size() == 0 ? Text.EMPTY : Text
-                .valueOf(new File(folder, file.toString()).getPath());
+    private void refreshEditor(final HuiNode root, final Text fileName) {
         final HuiEditor editor = (HuiEditor) root.find(ID_CONTENTS);
         final HuiLabel label = (HuiLabel) root.find(ID_FILENAME);
-        editor.setCurrent(fileName);
+        editor.setCurrent(base, fileName);
         label.setText(fileName);
     }
 
-    private void refreshHistory(HuiNode root) {
+    private void refreshHistory(HuiNode root, Text fileName) {
         final HuiHistory history = (HuiHistory) root.find(ID_HISTORY);
-        history.setFolder(getPath());
-        history.setFile(getFile());
+        history.setFile(base, fileName);
     }
 
     private void refreshList() {

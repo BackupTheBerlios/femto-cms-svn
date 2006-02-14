@@ -18,11 +18,8 @@
  */
 package de.mobizcorp.femtocms.httpd;
 
-import static de.mobizcorp.femtocms.prefs.ServerPreferences.EXPIRE_FACTOR_FALLBACK;
-import static de.mobizcorp.femtocms.prefs.ServerPreferences.EXPIRE_FACTOR_PREFERENCE;
 import static de.mobizcorp.femtocms.prefs.ServerPreferences.OUTPUT_CHARSET_FALLBACK;
 import static de.mobizcorp.femtocms.prefs.ServerPreferences.OUTPUT_CHARSET_PREFERENCE;
-import static de.mobizcorp.femtocms.prefs.ServerPreferences.getDouble;
 import static de.mobizcorp.femtocms.prefs.ServerPreferences.getString;
 
 import java.io.IOException;
@@ -50,9 +47,6 @@ import de.mobizcorp.femtocms.engine.StreamResource;
 public class RepositoryMount extends RepositoryResource {
 
     private BaseEngine engine;
-
-    private static double expireFactor = getDouble(EXPIRE_FACTOR_PREFERENCE,
-            EXPIRE_FACTOR_FALLBACK);
 
     private static final String charset = getString(OUTPUT_CHARSET_PREFERENCE,
             OUTPUT_CHARSET_FALLBACK);
@@ -86,18 +80,17 @@ public class RepositoryMount extends RepositoryResource {
                 if (pipeline != null && text != null) {
                     pipeline.setParameter("femtocms-request-parameters",
                             request.getParameters());
-                    OutputStream out = response.getPrintStream(8192);
-                    pipeline.setResult(new StreamResult(out));
                     response.set("Content-Type", contentTypeFor(pipeline)
                             + ";charset=" + charset);
                     response.setDate("Last-Modified", text.getLastModified());
-                    pipeline.parse(SAXSource.sourceToInputSource(text));
-                    long took = System.currentTimeMillis() - start;
-                    response.set("FCM-Render-Time", took + "ms");
-                    response.setDate("Expires",
-                            (long) (start + (took * expireFactor)));
+                    OutputStream out = response.getPrintStream(8192);
+                    try {
+                        pipeline.setResult(new StreamResult(out));
+                        pipeline.parse(SAXSource.sourceToInputSource(text));
+                    } finally {
+                        out.close();
+                    }
                     response.commit();
-                    out.close();
                 }
             } catch (ResourceNotFound e) {
                 // Try to fallback, complain later.
@@ -120,11 +113,11 @@ public class RepositoryMount extends RepositoryResource {
                     OutputStream out = response.getOutputStream();
                     copy(source, out);
                     out.close();
+                    response.commit();
                 } else {
                     handle(request, response, 404);
                     return;
                 }
-                response.commit();
             } catch (ResourceNotFound e) {
                 handle(request, response, new ErrorReport(e, 404));
                 return;

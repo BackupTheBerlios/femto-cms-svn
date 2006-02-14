@@ -233,9 +233,8 @@ public class ServerMain {
                 .println("femtocms, version " + FCM_VERSION + ", unreleased.");
         System.out.println("No warranty; not even for merchantability"
                 + " or fitness for a perticular purpose.");
-        System.out
-                .println("Rendering Copyright (C) 2005 mobizcorp Europe Ltd.,"
-                        + " all rights reserved.");
+        System.out.println("Rendering Copyright (C) 2005-2006"
+                + " mobizcorp Europe Ltd., all rights reserved.");
         System.out.println("Simpleweb Copyright (C) 2001 Niall Gallagher,"
                 + " subject to the GNU Lesser General Public License.");
         System.out.println("Mercurial Copyright (C) 2005 Matt Mackall,"

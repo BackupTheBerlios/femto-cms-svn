@@ -39,10 +39,10 @@ import de.mobizcorp.水星.Changes.LogEntry;
  * @author Copyright(C) 2005 Klaus Rennecke, all rights reserved.
  */
 public class HuiHistory extends HuiText {
-    
-    private Text folder;
-    
+
     private Text file;
+
+    private File base;
 
     public HuiHistory() {
     }
@@ -66,29 +66,30 @@ public class HuiHistory extends HuiText {
     protected void renderValue(OutputStream out) throws IOException {
         renderText(out, listHistory());
     }
-    
+
     private InputStream listHistory() throws IOException {
-        Changes changes = new Store(new File(folder.toString())).changes();
-        LogEntry entry = changes.read(changes.tip());
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        entry.writeTo(buffer);
+        final Store store = new Store(Store.findBase(new File(base, file
+                .toString())));
+        Changes changes = store.changes();
+        int start = changes.generation(changes.tip());
+        scan: for (int i = start; i >= 0; i--) {
+            LogEntry entry = changes.read(changes.version(i));
+            final Text[] files = entry.files;
+            for (int j = 0; j < files.length; j++) {
+                if (files[j].equals(file)) {
+                    entry.writeTo(buffer);
+                    buffer.write('\n');
+                    continue scan;
+                }
+            }
+        }
         return new ByteArrayInputStream(buffer.toByteArray());
     }
 
-    public final Text getFile() {
-        return file;
-    }
-
-    public final void setFile(Text file) {
+    public final void setFile(File base, Text file) {
+        this.base = base;
         this.file = file;
-    }
-
-    public final Text getFolder() {
-        return folder;
-    }
-
-    public final void setFolder(Text folder) {
-        this.folder = folder;
     }
 
 }

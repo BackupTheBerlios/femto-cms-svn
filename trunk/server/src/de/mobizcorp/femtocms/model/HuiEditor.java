@@ -25,6 +25,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.util.logging.Logger;
 
 import de.mobizcorp.hui.HuiText;
 import de.mobizcorp.lib.Text;
@@ -57,7 +58,11 @@ public class HuiEditor extends HuiText {
         }
     }
 
+    private File base;
+
     private Text current = Text.EMPTY;
+    
+    private transient boolean savePending = false;
 
     public HuiEditor() {
     }
@@ -68,20 +73,14 @@ public class HuiEditor extends HuiText {
         super(old);
     }
 
-    /**
-     * @return Returns the current file name.
-     */
-    public final Text getCurrent() {
-        return current;
-    }
-
     @Override
     public Text getValue() {
         if (current == null || current.size() == 0) {
             return Text.EMPTY;
         }
         try {
-            final FileInputStream in = new FileInputStream(current.toString());
+            final FileInputStream in = new FileInputStream(new File(base,
+                    current.toString()));
             try {
                 return TextBuffer.valueOf(in).toText();
             } finally {
@@ -97,28 +96,26 @@ public class HuiEditor extends HuiText {
         if (current == null || current.size() == 0) {
             return;
         }
-        final FileInputStream in = new FileInputStream(current.toString());
+        final FileInputStream in = new FileInputStream(new File(base, current
+                .toString()));
         try {
             renderText(out, new BufferedInputStream(in));
         } finally {
             in.close();
         }
     }
-
-    /**
-     * @param current
-     *            The current file name to set.
-     */
-    public final void setCurrent(Text current) {
-        this.current = current;
+    
+    public void saveValue() {
+        savePending = true;
     }
 
-    public void saveValue() {
-        if (current == null || current.size() == 0) {
-            return;
-        }
+    @Override
+    public void commit() {
         try {
-            final File oldFile = new File(current.toString());
+            if (!savePending || current == null || current.size() == 0) {
+                return;
+            }
+            final File oldFile = new File(base, current.toString());
             final File newFile = File.createTempFile(oldFile.getName(), ".new",
                     oldFile.getParentFile());
             final File bakFile = File.createTempFile(oldFile.getName(), ".bak",
@@ -144,8 +141,20 @@ public class HuiEditor extends HuiText {
         } catch (NullPointerException e) {
             // no current file set
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            Logger.getLogger("de.mobizcorp").warning(
+                    "save failed: " + e.toString());
+        } finally {
+            savePending = false;
         }
+    }
+
+    /**
+     * @param current
+     *            The current file name to set.
+     */
+    public final void setCurrent(File base, Text current) {
+        this.base = base;
+        this.current = current;
     }
 
 }
