@@ -237,6 +237,16 @@ public class Store {
         return new Changes(base);
     }
 
+    /**
+     * Loop up version for the given key, first in the current tags and then as
+     * either generation or version hash.
+     * 
+     * @param key
+     *            tag, generation or version hash.
+     * @return a version, or null.
+     * @throws IOException
+     *             propagated from I/O.
+     */
     public Version lookup(Text key) throws IOException {
         Version result = tags().get(key);
         if (result == null) {
@@ -249,6 +259,11 @@ public class Store {
         return new Manifest(base);
     }
 
+    /**
+     * @return a map from tag name to version.
+     * @throws IOException
+     *             propagated from I/O.
+     */
     public HashMap<Text, Version> tags() throws IOException {
         HashMap<Text, Version> tags = new HashMap<Text, Version>();
         final Element f = file(HG_TAGS);

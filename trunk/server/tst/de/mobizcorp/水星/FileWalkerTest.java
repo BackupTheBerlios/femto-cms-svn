@@ -18,24 +18,27 @@
  */
 package de.mobizcorp.水星;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import java.io.File;
+
+import de.mobizcorp.水星.Walker.FileWalker;
+
+import junit.framework.TestCase;
 
 /**
- * Suite for running all tests.
+ * File walker tests.
  * 
  * @author Copyright(C) 2006 Klaus Rennecke, all rights reserved.
  */
-public class AllTests {
+public class FileWalkerTest extends TestCase {
 
-    public static Test suite() {
-        TestSuite suite = new TestSuite("Test for de.mobizcorp.水星");
-        //$JUnit-BEGIN$
-        suite.addTestSuite(FileWalkerTest.class);
-        suite.addTestSuite(StateTest.class);
-        suite.addTestSuite(StoreTest.class);
-        //$JUnit-END$
-        return suite;
+    /*
+     * Test method for 'de.mobizcorp.水星.Walker.FileWalker.FileWalker(File)'
+     */
+    public void testFileWalker() {
+        FileWalker walker = new Walker.FileWalker(new File("."));
+        while (walker.hasNext()) {
+            System.out.println(walker.next());
+        }
     }
 
 }

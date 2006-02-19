@@ -48,6 +48,7 @@ public class StoreTest extends TestCase {
         assertTrue(cwd.isDirectory());
         final File tmp = File.createTempFile("StoreTest.", ".tmp");
         final Manifest m = s.manifest();
+        int max = 50;
         for (Text name : m.read(m.tip()).keySet()) {
             Element element = s.file(Text.valueOf(name));
             Text t1 = Text.constant(element.read(element.tip())), t2;
@@ -62,6 +63,9 @@ public class StoreTest extends TestCase {
             }
             assertEquals("contents", t1, t2);
             tmp.delete();
+            if (--max < 0) {
+                break;
+            }
         }
     }
 

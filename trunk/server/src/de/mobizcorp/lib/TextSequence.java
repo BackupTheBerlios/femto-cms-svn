@@ -115,4 +115,11 @@ public interface TextSequence {
      * @return the byte at index.
      */
     byte getByte(int index);
+    
+    /**
+     * Get the unicode code point at index. The index is allowed to point into the middle of a multi-byte sequence, in this case the code point for that sequence is returned. 
+     * @param index a byte index into this sequence.
+     * @return the unicode code point.
+     */
+    int getUnicode(int index);
 }

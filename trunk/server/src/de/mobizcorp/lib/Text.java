@@ -333,6 +333,16 @@ public final class Text implements TextSequence {
         }
         return data[off + index];
     }
+    
+    public int getUnicode(int index) {
+        if (index < 0) {
+            throw new IndexOutOfBoundsException(index + " < 0");
+        }
+        if (len <= index) {
+            throw new IndexOutOfBoundsException(len + " <= " + index);
+        }
+        return getUnicode(data, off + index);
+    }
 
     @Override
     public int hashCode() {
@@ -505,5 +515,23 @@ public final class Text implements TextSequence {
 
     public void writeTo(OutputStream out) throws IOException {
         out.write(data, off, len);
+    }
+
+    static int getUnicode(final byte[] data, int i) {
+        while ((data[i] & 0xC0) == 0x80) {
+            --i;
+        }
+        int b = data[i];
+        if ((b & 0x80) != 0) {
+            int r = b;
+            int m = 0x3F;
+            while ((r & 0xC0) == 0xC0) {
+                b = (b << 6) | (data[++i] & 0x3F);
+                m = (m << 5) | 0x3F;
+                r <<= 1;
+            }
+            b = b & m;
+        }
+        return b;
     }
 }

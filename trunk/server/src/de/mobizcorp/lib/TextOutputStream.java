@@ -52,6 +52,10 @@ public class TextOutputStream extends OutputStream implements TextSequence {
     public byte getByte(int index) {
         return buffer.getByte(index);
     }
+    
+    public int getUnicode(int index) {
+        return buffer.getUnicode(index);
+    }
 
     public TextIterator iterator() {
         return buffer.iterator();

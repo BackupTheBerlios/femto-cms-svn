@@ -1,6 +1,6 @@
 /*
- * 水星 - Water Star.
- * Copyright(C) 2006 Klaus Rennecke, all rights reserved.
+ * Library of utility classes.
+ * Copyright(C) 2005 Klaus Rennecke, all rights reserved.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-package de.mobizcorp.水星;
+package de.mobizcorp.lib;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -29,11 +29,9 @@ import junit.framework.TestSuite;
 public class AllTests {
 
     public static Test suite() {
-        TestSuite suite = new TestSuite("Test for de.mobizcorp.水星");
+        TestSuite suite = new TestSuite("Test for de.mobizcorp.lib");
         //$JUnit-BEGIN$
-        suite.addTestSuite(FileWalkerTest.class);
-        suite.addTestSuite(StateTest.class);
-        suite.addTestSuite(StoreTest.class);
+        suite.addTestSuite(TextTest.class);
         //$JUnit-END$
         return suite;
     }
