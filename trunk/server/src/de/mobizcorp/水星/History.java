@@ -18,13 +18,15 @@
  */
 package de.mobizcorp.水星;
 
+import java.io.EOFException;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.util.List;
 import java.util.zip.DataFormatException;
 
-import de.mobizcorp.lib.Text;
 
 /**
  * Abstract history implementation.
@@ -34,30 +36,66 @@ import de.mobizcorp.lib.Text;
 public class History {
     private static final byte[] EMPTY = new byte[0];
 
-    private final File chunks;
+    private final String chunks;
 
     private RandomAccessFile dataFile;
 
     private final Index index;
 
-    protected History(final File index, final File chunks) throws IOException {
-        this.index = new Index(index, "r");
+    private final StreamFactory base;
+
+    protected History(final StreamFactory base, final String index,
+            final String chunks) throws IOException {
+        this.base = base;
+        this.index = new Index(base, index, "r");
         this.chunks = chunks;
     }
 
     public byte[] chunk(int g) throws IOException {
         final Index.Entry entry = index.get(g);
         byte[] buffer = new byte[entry.length];
-        if (dataFile == null) {
-            dataFile = new RandomAccessFile(chunks, "r");
+        final int offset = entry.offset;
+        if (base instanceof StreamFactory.Local) {
+            readChunk(((StreamFactory.Local) base).file(chunks), buffer, offset);
+        } else {
+            readChunk(base.openInput(chunks), buffer, offset);
         }
-        dataFile.seek(entry.offset);
-        dataFile.readFully(buffer);
         try {
             return Store.decompress(buffer);
         } catch (DataFormatException e) {
             throw new IOException("failed to decompress: " + e);
         }
+    }
+
+    private void readChunk(final InputStream in, final byte[] buffer,
+            final int offset) throws IOException {
+        int scan = offset;
+        while (scan > 0) {
+            long n = in.skip(offset);
+            if (n > 0) {
+                scan -= n;
+            } else {
+                throw new EOFException("EOF before chunk");
+            }
+        }
+        scan = 0;
+        while (scan < buffer.length) {
+            int n = in.read(buffer, scan, buffer.length - scan);
+            if (n > 0) {
+                scan += n;
+            } else {
+                throw new EOFException("EOF in chunk");
+            }
+        }
+    }
+
+    private void readChunk(final File chunks, final byte[] buffer,
+            final int offset) throws FileNotFoundException, IOException {
+        if (dataFile == null) {
+            dataFile = new RandomAccessFile(chunks, "r");
+        }
+        dataFile.seek(offset);
+        dataFile.readFully(buffer);
     }
 
     public byte[] contents(Version version) throws IOException {
@@ -96,7 +134,7 @@ public class History {
         return index.heads();
     }
 
-    public Version lookup(Text key) {
+    public Version lookup(String key) {
         return index.lookup(key);
     }
 

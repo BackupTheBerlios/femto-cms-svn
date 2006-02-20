@@ -140,7 +140,7 @@ public class TextLoader extends Sink {
     @Override
     public void handleCharacterData(boolean parsed, Text value) {
         if (text != null) {
-            text = text.concat(value);
+            text = new Text(text, value);
         }
     }
 

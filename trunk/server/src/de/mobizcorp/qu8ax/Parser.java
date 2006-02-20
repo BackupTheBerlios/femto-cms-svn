@@ -1048,7 +1048,7 @@ public class Parser {
 
     public static final Text XMLNS = Text.valueOf("xmlns");
 
-    public static final Text XMLNS_ = XMLNS.concat(COLON).toText();
+    public static final Text XMLNS_ = new Text(XMLNS, COLON);
 
     public static final Text YES = Text.constant(new byte[] { 'y', 'e', 's' });
 

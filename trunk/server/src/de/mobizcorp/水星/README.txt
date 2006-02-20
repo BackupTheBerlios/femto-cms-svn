@@ -18,6 +18,7 @@ translations to Mercurial nomenclature.
  * Generation ^= revision
  * History ^= revlog
  * Store ^= localrepo
+ * StreamFactory ^= opener
  * Undo ^= transaction
  * Version ^= node
 

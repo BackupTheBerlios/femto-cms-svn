@@ -37,7 +37,7 @@ import de.mobizcorp.水星.Store.TagEntry;
  */
 public class StoreTest extends TestCase {
 
-    private static final String CWD = "../hg";
+    private static final String CWD = "../test";
 
     /*
      * Test method for 'de.mobizcorp.水星.Store.file(Text)'
@@ -49,8 +49,8 @@ public class StoreTest extends TestCase {
         final File tmp = File.createTempFile("StoreTest.", ".tmp");
         final Manifest m = s.manifest();
         int max = 50;
-        for (Text name : m.read(m.tip()).keySet()) {
-            Element element = s.file(Text.valueOf(name));
+        for (String name : m.read(m.tip()).keySet()) {
+            Element element = s.file(name);
             Text t1 = Text.constant(element.read(element.tip())), t2;
             // we must cat to file or the line endings will not match
             exec(cwd, "hg", "-y", "cat", "-o", tmp.toString(), name.toString())

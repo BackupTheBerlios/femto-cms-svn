@@ -26,8 +26,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import de.mobizcorp.lib.FNV1aHash;
-import de.mobizcorp.lib.Text;
-import de.mobizcorp.lib.TextBuffer;
 
 /**
  * Version abstraction, serves as identifiers for versions.
@@ -57,17 +55,6 @@ public final class Version {
 		for (int i = 0, j = 0; i < end; i++) {
 			int b = nibble(hex.charAt(j++));
 			b = (b << 4) | nibble(hex.charAt(j++));
-			result[i] = (byte) b;
-		}
-		return result;
-	}
-
-	public static byte[] bin(final Text hex) {
-		final int end = hex.size() / 2;
-		final byte[] result = new byte[end];
-		for (int i = 0, j = 0; i < end; i++) {
-			int b = nibble((char) hex.getByte(j++));
-			b = (b << 4) | nibble((char) hex.getByte(j++));
 			result[i] = (byte) b;
 		}
 		return result;
@@ -129,11 +116,6 @@ public final class Version {
 	}
 
 	public static Version create(final String hex) {
-		byte[] id = bin(hex);
-		return NULL.isId(id) ? NULL : new Version(id);
-	}
-
-	public static Version create(final Text hex) {
 		byte[] id = bin(hex);
 		return NULL.isId(id) ? NULL : new Version(id);
 	}
@@ -244,15 +226,5 @@ public final class Version {
 	public String toString() {
 		return hex(id);
 	}
-    
-    public Text toText() {
-        final int end = id.length;
-        TextBuffer buffer = new TextBuffer(end * 2);
-        for (int i = 0; i < end; i++) {
-            int b = id[i];
-            buffer.append(digit((b >>> 4) & 15)).append(digit(b & 15));
-        }
-        return buffer.toText();
-    }
 
 }

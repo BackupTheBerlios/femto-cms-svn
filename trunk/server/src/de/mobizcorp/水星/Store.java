@@ -18,11 +18,15 @@
  */
 package de.mobizcorp.水星;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.text.CollationKey;
 import java.text.Collator;
 import java.util.ArrayList;
@@ -35,9 +39,7 @@ import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
-import de.mobizcorp.lib.Text;
-import de.mobizcorp.lib.TextBuffer;
-import de.mobizcorp.lib.TextParser;
+import de.mobizcorp.水星.Lock.LockFailed;
 
 /**
  * Local SCM store.
@@ -47,15 +49,24 @@ import de.mobizcorp.lib.TextParser;
 public class Store {
 
     public static class TagEntry implements Comparable<TagEntry> {
-        public final int g;
+        private static Collator c;
 
-        public final Text t;
-
-        public final Version v;
+        private static synchronized Collator getCollator() {
+            if (c == null) {
+                c = Collator.getInstance();
+            }
+            return c;
+        }
 
         private transient CollationKey ck;
 
-        public TagEntry(final int g, final Text t, final Version v) {
+        public final int g;
+
+        public final String t;
+
+        public final Version v;
+
+        public TagEntry(final int g, final String t, final Version v) {
             this.g = g;
             this.t = t;
             this.v = v;
@@ -68,31 +79,38 @@ public class Store {
 
         private synchronized CollationKey getCollationKey() {
             if (ck == null) {
-                ck = getCollator().getCollationKey(t.toString());
+                ck = getCollator().getCollationKey(t);
             }
             return ck;
         }
-
-        private static Collator c;
-
-        private static synchronized Collator getCollator() {
-            if (c == null) {
-                c = Collator.getInstance();
-            }
-            return c;
-        }
     }
 
-    private static final Text HG_TAGS = Text.valueOf(".hgtags");
-
-    // TODO find proper place for this
-    public static final Text NL = Text.constant((byte) '\n');
+    private static final String HG_TAGS = ".hgtags";
 
     private static final Deflater sharedDeflater = new Deflater();
 
     private static final Inflater sharedInflater = new Inflater();
 
-    private static final Text TIP = Text.valueOf("tip");
+    private static final String TIP = "tip";
+
+    private static final byte[] EMPTY = new byte[0];
+
+    private static void addTag(HashMap<String, Version> tags, String text) {
+        int mark = text.lastIndexOf(' ');
+        if (mark != -1) {
+            String n = trim(text, 0, mark);
+            String k = text.substring(mark + 1);
+            tags.put(k, Version.create(n));
+        }
+    }
+
+    private static void addTags(HashMap<String, Version> tags,
+            final BufferedReader file) throws IOException {
+        String line;
+        while ((line = file.readLine()) != null) {
+            addTag(tags, line);
+        }
+    }
 
     public static byte[] compress(byte[] data) {
         return compress(data, 0, data.length);
@@ -188,19 +206,18 @@ public class Store {
         return data;
     }
 
-    public static File findBase(String cwd) {
-        return findBase(new File(cwd));
-    }
-
     public static File findBase(final File cwd) {
         File scan = cwd;
         try {
             while (scan != null) {
                 File store = new File(scan, ".hg");
                 if (store.isDirectory()) {
-                    return store;
+                    return scan;
                 } else {
                     File next = scan.getParentFile();
+                    if (next == null) {
+                        next = scan.getAbsoluteFile().getParentFile();
+                    }
                     if (next.equals(scan)) {
                         // in case getParentFile returns the same
                         break;
@@ -215,26 +232,110 @@ public class Store {
         throw new IllegalArgumentException("no store found for '" + cwd + "'");
     }
 
-    private final File base;
+    public static File findBase(String cwd) {
+        return findBase(new File(cwd));
+    }
+
+    private static void forceRename(File from, File to) {
+        if (!from.renameTo(to)) {
+            to.delete();
+            from.renameTo(to);
+        }
+    }
+
+    public static boolean startsWith(final byte[] data, final byte[] match) {
+        int scan = match.length;
+        if (scan > data.length) {
+            return false;
+        }
+        while (--scan >= 0) {
+            if (data[scan] != match[scan]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static byte[] toBytes(String str) {
+        try {
+            return (str == null || str.length() == 0) ? EMPTY : str
+                    .getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalStateException(e.toString());
+        }
+    }
+
+    public static String toString(byte[] data) {
+        return toString(data, 0, data.length);
+    }
+
+    public static String toString(byte[] data, int off, int len) {
+        try {
+            return new String(data, off, len, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalStateException(e.toString());
+        }
+    }
+
+    private static String trim(String text, int off, int len) {
+        while (len > 0 && text.charAt(off + len - 1) <= ' ') {
+            len -= 1;
+        }
+        while (len > 0 && text.charAt(off) <= ' ') {
+            len -= 1;
+            off += 1;
+        }
+        return text.substring(off, off + len);
+    }
+
+    private final StreamFactory base;
+
+    private final State state;
 
     public Store() throws IOException {
         this(System.getProperty("user.dir", "."));
     }
 
-    public Store(File base) throws IOException {
-        this.base = base.getAbsoluteFile();
+    public Store(File root) throws IOException {
+        this.base = new StreamFactory.Local(new File(root, ".hg"));
+        this.state = new State(base, root);
     }
 
     public Store(String cwd) throws IOException {
         this(findBase(cwd));
     }
-
-    public Element file(Text path) throws IOException {
-        return new Element(base, path);
+    
+    public void add(final String... names) throws LockFailed, InterruptedException {
+        Lock lock = writeLock();
+        try {
+            for (String name : names) {
+                File file = state.file(name);
+                if (!file.isFile()) {
+                    if (file.exists()) {
+                        System.err.println("not a plain file: " + file);
+                    } else {
+                        System.err.println("doex not exist: " + file);
+                    }
+                } else {
+                    byte s = state.getState(name);
+                    if (s == 'a' || s == 'n') {
+                        System.err.println("already tracked: " + file);
+                    } else {
+                        state.update((byte)'a', name);
+                    }
+                }
+            }
+        } finally {
+            lock.release();
+        }
     }
 
     public Changes changes() throws IOException {
         return new Changes(base);
+    }
+
+    public Element file(String path) throws IOException {
+        return new Element(base, path);
     }
 
     /**
@@ -247,7 +348,7 @@ public class Store {
      * @throws IOException
      *             propagated from I/O.
      */
-    public Version lookup(Text key) throws IOException {
+    public Version lookup(String key) throws IOException {
         Version result = tags().get(key);
         if (result == null) {
             result = changes().lookup(key);
@@ -259,49 +360,9 @@ public class Store {
         return new Manifest(base);
     }
 
-    /**
-     * @return a map from tag name to version.
-     * @throws IOException
-     *             propagated from I/O.
-     */
-    public HashMap<Text, Version> tags() throws IOException {
-        HashMap<Text, Version> tags = new HashMap<Text, Version>();
-        final Element f = file(HG_TAGS);
-        final List<Version> h = f.heads();
-        Collections.reverse(h);
-        for (Version v : h) {
-            addTags(tags, Text.constant(f.read(v)));
-        }
-        try {
-            File file = new File(base, "localtags");
-            if (file.isFile()) {
-                FileInputStream in = new FileInputStream(file);
-                try {
-                    addTags(tags, new TextBuffer().append(in).toText());
-                } finally {
-                    in.close();
-                }
-            }
-        } catch (FileNotFoundException optional) {
-            // ignored
-        }
-        tags.put(TIP, changes().tip());
-        return tags;
-    }
-
-    public List<Text> tags(Version v) throws IOException {
-        List<Text> result = new ArrayList<Text>();
-        for (Entry<Text, Version> e : tags().entrySet()) {
-            if (v.equals(e.getValue())) {
-                result.add(e.getKey());
-            }
-        }
-        return result;
-    }
-
     public List<TagEntry> taglist() throws IOException {
         ArrayList<TagEntry> result = new ArrayList<TagEntry>();
-        for (Map.Entry<Text, Version> e : tags().entrySet()) {
+        for (Map.Entry<String, Version> e : tags().entrySet()) {
             int g = -2;
             try {
                 g = changes().generation(e.getValue());
@@ -314,69 +375,127 @@ public class Store {
         return result;
     }
 
-    public Undo transaction() throws IOException {
-        TextBuffer b = new TextBuffer();
+    /**
+     * @return a map from tag name to version.
+     * @throws IOException
+     *             propagated from I/O.
+     */
+    public HashMap<String, Version> tags() throws IOException {
+        HashMap<String, Version> tags = new HashMap<String, Version>();
+        final Element f = file(HG_TAGS);
+        final List<Version> h = f.heads();
+        Collections.reverse(h);
+        for (Version v : h) {
+            addTags(tags, new BufferedReader(new InputStreamReader(
+                    new ByteArrayInputStream(f.read(v)), "UTF-8")));
+        }
         try {
-            FileInputStream in = new FileInputStream(new File(base, "dirstate"));
+            InputStream in = base.openInput("localtags");
             try {
-                b.append(in);
+                addTags(tags, new BufferedReader(new InputStreamReader(in)));
+            } finally {
+                in.close();
+            }
+        } catch (FileNotFoundException optional) {
+            // ignored
+        }
+        tags.put(TIP, changes().tip());
+        return tags;
+    }
+
+    public List<String> tags(Version v) throws IOException {
+        List<String> result = new ArrayList<String>();
+        for (Entry<String, Version> e : tags().entrySet()) {
+            if (v.equals(e.getValue())) {
+                result.add(e.getKey());
+            }
+        }
+        return result;
+    }
+
+    public Undo transaction() throws IOException {
+        final StreamFactory.Local localBase = (StreamFactory.Local) base;
+
+        try {
+            InputStream in = base.openInput(State.DIRSTATE);
+            try {
+                OutputStream out = base.openOutput("journal.dirstate");
+                try {
+                    final byte[] buffer = new byte[8192];
+                    int n;
+                    while ((n = in.read(buffer)) != -1) {
+                        if (n > 0) {
+                            out.write(buffer, 0, n);
+                        }
+                    }
+                } finally {
+                    out.close();
+                }
             } finally {
                 in.close();
             }
         } catch (FileNotFoundException e) {
             // not yet created
         }
-        FileOutputStream out = new FileOutputStream(new File(base,
-                "journal.dirstate"));
-        try {
-            b.writeTo(out);
-        } finally {
-            out.close();
-        }
-        final File journal = new File(base, "journal");
+        final File journal = localBase.file("journal");
         Runnable after = new Runnable() {
 
             public void run() {
-                forceRename(journal, new File(base, "undo"));
-                forceRename(new File(base, "journal.dirstate"), new File(base,
-                        "undo.dirstate"));
+                forceRename(journal, localBase.file("undo"));
+                forceRename(localBase.file("journal.dirstate"), localBase
+                        .file("undo.dirstate"));
             }
 
         };
         return new Undo(journal, after);
     }
 
-    private static void addTags(HashMap<Text, Version> tags, Text file) {
-        TextParser tp = new TextParser(file, NL);
-        while (tp.hasNext()) {
-            addTag(tags, tp.next());
-        }
+    public Walker walk() {
+        return state.walk();
     }
 
-    private static void addTag(HashMap<Text, Version> tags, Text text) {
-        int mark = text.lastIndexOf(' ');
-        if (mark != -1) {
-            Text n = trim(text, 0, mark);
-            Text k = text.part(mark + 1, text.size() - mark - 1);
-            tags.put(k, Version.create(n));
-        }
+    public Lock writeLock() throws LockFailed, InterruptedException {
+        Lock lock = new Lock(((StreamFactory.Local) base).file("wlock"),
+                new Runnable() {
+                    public void run() {
+                        try {
+                            state.write();
+                        } catch (IOException e) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        }
+                    }
+                });
+        lock.lock(0);
+        state.read();
+        return lock;
     }
 
-    private static Text trim(Text text, int off, int len) {
-        while (len > 0 && text.getByte(off + len - 1) <= ' ') {
-            len -= 1;
-        }
-        while (len > 0 && text.getByte(off) <= ' ') {
-            len -= 1;
-            off += 1;
-        }
-        return text.part(off, len);
+    public static int indexOf(final byte[] data, final byte[] match) {
+        return indexOf(data, match, 0);
     }
 
-    private static void forceRename(File from, File to) {
-        if (!from.renameTo(to)) {
-            to.delete();
-            from.renameTo(to);
+    public static int indexOf(final byte[] data, final byte[] match,
+            final int start) {
+        final int end = data.length - match.length;
+        seek: for (int i = start; i <= end; i++) {
+            int j = match.length;
+            while (--j >= 0) {
+                if (data[i + j] != match[j]) {
+                    continue seek;
+                }
+            }
+            return i;
         }
+        return -1;
+    }
+
+    public static int indexOf(final byte[] data, final int b, final int start) {
+        for (int i = start; i < data.length; i++) {
+            if (data[i] == b) {
+                return i;
+            }
+        }
+        return -1;
     }
 }

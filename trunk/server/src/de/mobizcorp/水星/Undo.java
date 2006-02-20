@@ -25,9 +25,6 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.HashMap;
 
-import de.mobizcorp.lib.Text;
-import de.mobizcorp.lib.TextBuffer;
-
 /**
  * Undo encapsulation with journal.
  * 
@@ -67,10 +64,10 @@ public class Undo {
 		String path = file.getAbsolutePath();
 		if (!map.containsKey(path)) {
 			map.put(path, new Entry(file, offset));
-			TextBuffer b = new TextBuffer();
-			b.append(path).append((byte) 0).append(Text.valueOf(offset, 10))
-					.append("\n");
-			b.writeTo(undoLog);
+            undoLog.write(Store.toBytes(path));
+            undoLog.write(0);
+            undoLog.write(Store.toBytes(Integer.toString(offset)));
+            undoLog.write('\n');
 			undoLog.flush();
 		}
 	}

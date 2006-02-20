@@ -18,9 +18,8 @@
  */
 package de.mobizcorp.水星;
 
-import java.io.FileInputStream;
+import java.io.IOException;
 
-import de.mobizcorp.lib.TextBuffer;
 import junit.framework.TestCase;
 
 /**
@@ -73,22 +72,12 @@ public class StateTest extends TestCase {
     }
 
     /*
-     * Test method for 'de.mobizcorp.水星.State.readLine(InputStream, TextBuffer)'
+     * Test method for 'de.mobizcorp.水星.State.walk()'
      */
-    public void testReadLine() {
-        try {
-            // FIXME use proper fixture
-            final TextBuffer buffer = new TextBuffer();
-            final FileInputStream in = new FileInputStream("../hg/.hgignore");
-            try {
-                while (State.readLine(in, buffer)) {
-                    System.out.println(buffer);
-                }
-            } finally {
-                in.close();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+    public void testWalk() throws IOException {
+        Walker walker = new Store("../test").walk();
+        while (walker.hasNext()) {
+            System.out.println(walker.next());
         }
     }
 }

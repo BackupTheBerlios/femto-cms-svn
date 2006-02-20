@@ -71,7 +71,7 @@ public class ViewEngine extends NullEngine {
 
     private Version currentVersion;
 
-    private HashMap<Text, Entry> currentManifest;
+    private HashMap<String, Entry> currentManifest;
 
     public ViewEngine(File base) throws IOException {
         super(base);
@@ -108,7 +108,7 @@ public class ViewEngine extends NullEngine {
         }
         byte[] data = resourceCache.get(entry.version);
         if (data == null) {
-            data = store.file(path).read(entry.version);
+            data = store.file(path.toString()).read(entry.version);
             resourceCache.put(entry.version, data);
         }
         StreamResource result = new StreamResource();
@@ -141,7 +141,7 @@ public class ViewEngine extends NullEngine {
         return getManifest().get(path) != null;
     }
 
-    private HashMap<Text, Entry> getManifest() throws IOException {
+    private HashMap<String, Entry> getManifest() throws IOException {
         if (dirty) {
             initManifest();
         }

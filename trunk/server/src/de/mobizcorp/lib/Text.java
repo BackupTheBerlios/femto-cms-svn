@@ -37,9 +37,11 @@ public final class Text implements TextSequence {
 
     public static final int MIN_RADIX = 2;
 
-    public static final Text TRUE = constant(new byte[] { 't', 'r', 'u', 'e' });
+    public static final Text TRUE = valueOf("true");
 
-    public static Text constant(byte... data) {
+    public static final Text WHITE_SPACE = valueOf(" \f\t\r\n");
+
+    public static Text constant(final byte... data) {
         return new Text(data, 0, data.length);
     }
 
@@ -97,6 +99,24 @@ public final class Text implements TextSequence {
         return a == b || (a != null && a.equals(b));
     }
 
+    static int getUnicode(final byte[] data, int i) {
+        while ((data[i] & 0xC0) == 0x80) {
+            --i;
+        }
+        int b = data[i];
+        if ((b & 0x80) != 0) {
+            int r = b;
+            int m = 0x3F;
+            while ((r & 0xC0) == 0xC0) {
+                b = (b << 6) | (data[++i] & 0x3F);
+                m = (m << 5) | 0x3F;
+                r <<= 1;
+            }
+            b = b & m;
+        }
+        return b;
+    }
+
     public static final int length(byte[] data, int off, int len) {
         int count = 0;
         int scan = off + len;
@@ -114,10 +134,11 @@ public final class Text implements TextSequence {
             return true;
         } else if (a == null || b == null) {
             return false;
-        } else
+        } else {
             try {
-                for (int i = 0; i < len; i++) {
-                    if (a[a0 + i] != b[b0 + i]) {
+                int scan = len;
+                while (--scan >= 0) {
+                    if (a[a0 + scan] != b[b0 + scan]) {
                         return false;
                     }
                 }
@@ -125,6 +146,7 @@ public final class Text implements TextSequence {
             } catch (ArrayIndexOutOfBoundsException e) {
                 return false;
             }
+        }
     }
 
     public static int toDigit(int b, int radix) {
@@ -274,13 +296,13 @@ public final class Text implements TextSequence {
 
     private final int off, len;
 
-    Text(byte[] data, int off, int len) {
+    Text(final byte[] data, final int off, final int len) {
         this.data = data;
         this.off = off;
         this.len = len;
     }
 
-    public Text(String str) {
+    public Text(final String str) {
         try {
             this.data = str.getBytes("UTF-8");
             this.len = data.length;
@@ -290,13 +312,17 @@ public final class Text implements TextSequence {
         }
     }
 
-    public TextSequence concat(Text text) {
-        if (len == 0) {
-            return text;
-        } else if (text.len == 0) {
-            return this;
-        } else {
-            return new TextBuffer(len + text.len).append(this).append(text);
+    public Text(final TextSequence... parts) {
+        int pos = 0;
+        for (final TextSequence part : parts) {
+            pos += part.size();
+        }
+        this.data = new byte[pos];
+        this.off = 0;
+        this.len = pos;
+        pos = 0;
+        for (final TextSequence part : parts) {
+            pos += part.writeTo(data, pos, part.size());
         }
     }
 
@@ -333,7 +359,7 @@ public final class Text implements TextSequence {
         }
         return data[off + index];
     }
-    
+
     public int getUnicode(int index) {
         if (index < 0) {
             throw new IndexOutOfBoundsException(index + " < 0");
@@ -448,6 +474,33 @@ public final class Text implements TextSequence {
         return new Text(data, this.off + off, len);
     }
 
+    public boolean regionMatches(final int start, final byte[] data,
+            final int off, final int len) {
+        return regionMatches(this.data, this.off + start, data, off, len);
+    }
+
+    public Text replace(final byte a, final byte b) {
+        int scan = off + len;
+        while (--scan >= off) {
+            if (data[scan] == a) {
+                break;
+            }
+        }
+        if (scan < off) {
+            return this;
+        }
+        final byte[] temp = new byte[len];
+        System.arraycopy(data, off, temp, 0, len);
+        scan -= off;
+        temp[scan] = b;
+        while (--scan >= 0) {
+            if (temp[scan] == a) {
+                temp[scan] = b;
+            }
+        }
+        return new Text(temp, 0, temp.length);
+    }
+
     public int size() {
         return len;
     }
@@ -515,23 +568,5 @@ public final class Text implements TextSequence {
 
     public void writeTo(OutputStream out) throws IOException {
         out.write(data, off, len);
-    }
-
-    static int getUnicode(final byte[] data, int i) {
-        while ((data[i] & 0xC0) == 0x80) {
-            --i;
-        }
-        int b = data[i];
-        if ((b & 0x80) != 0) {
-            int r = b;
-            int m = 0x3F;
-            while ((r & 0xC0) == 0xC0) {
-                b = (b << 6) | (data[++i] & 0x3F);
-                m = (m << 5) | 0x3F;
-                r <<= 1;
-            }
-            b = b & m;
-        }
-        return b;
     }
 }

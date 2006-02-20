@@ -18,13 +18,9 @@
  */
 package de.mobizcorp.水星;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-
-import de.mobizcorp.lib.Text;
-import de.mobizcorp.lib.TextParser;
+import java.util.StringTokenizer;
 
 /**
  * Manifest file implementation.
@@ -48,42 +44,34 @@ public class Manifest extends History {
         }
     }
 
-    private static final Text X = Text.constant((byte) 'x');
+    private static final String MANIFEST_CHUNKS = "00manifest.d";
 
-    public static void main(String args[]) throws Exception {
-        Manifest manifest = new Store(args[0]).manifest();
-        HashMap<Text, Entry> map = manifest.read(manifest.tip());
-        ArrayList<Text> files = new ArrayList<Text>();
-        files.addAll(map.keySet());
-        for (Text f : files) {
-            Entry entry = map.get(f);
-            System.out.println(entry.toString() + f);
-        }
-    }
+    private static final String MANIFEST_INDEX = "00manifest.i";
 
-    private HashMap<Text, Entry> currentManifest;
+    private static final String X = "x";
+
+    private HashMap<String, Entry> currentManifest;
 
     private Version currentVersion;
 
-    public Manifest(File base) throws IOException {
-        super(new File(base, "00manifest.i"), new File(base, "00manifest.d"));
+    public Manifest(StreamFactory base) throws IOException {
+        super(base, MANIFEST_INDEX, MANIFEST_CHUNKS);
     }
 
-    public synchronized HashMap<Text, Entry> read(Version version)
+    public synchronized HashMap<String, Entry> read(Version version)
             throws IOException {
         if (!version.equals(currentVersion)) {
             currentVersion = version;
-            currentManifest = new HashMap<Text, Entry>();
-            final TextParser tp = new TextParser(Text
-                    .constant(contents(version)), Store.NL);
-            while (tp.hasNext()) {
-                Text line = tp.next();
+            currentManifest = new HashMap<String, Entry>();
+            final StringTokenizer tok = new StringTokenizer(Store
+                    .toString(contents(version)), "\n");
+            while (tok.hasMoreTokens()) {
+                String line = tok.nextToken();
                 int j = line.lastIndexOf(0);
                 if (j != -1) {
-                    Text f = line.part(0, j);
-                    Version v = Version.create(line.part(j + 1, 40));
-                    boolean x = X.equals(line
-                            .part(j + 41, line.size() - j - 41));
+                    String f = line.substring(0, j);
+                    Version v = Version.create(line.substring(j + 1, j + 41));
+                    boolean x = X.equals(line.substring(j + 41));
                     currentManifest.put(f, new Entry(v, x));
                 }
             }

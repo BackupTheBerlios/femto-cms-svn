@@ -147,8 +147,9 @@ public final class TextBuffer implements TextSequence {
      *            starting offset of range to remove, or -1.
      * @param len
      *            length of range to remove.
+     * @return
      */
-    public void chop(int off, int len) {
+    public TextBuffer chop(int off, int len) {
         if (off < 0) {
             off = this.len < len ? 0 : this.len - len;
         }
@@ -156,12 +157,13 @@ public final class TextBuffer implements TextSequence {
             len = this.len - off;
         }
         if (len <= 0) {
-            return;
+            return this;
         }
         if (off + len == this.len) {
             this.len -= len;
         } else if (off == 0) {
             this.off += len;
+            this.len -= len;
         } else {
             this.len -= len;
             if (open) {
@@ -174,8 +176,10 @@ public final class TextBuffer implements TextSequence {
                         this.len - off);
                 this.data = shrink;
                 this.off = 0;
+                open = true;
             }
         }
+        return this;
     }
 
     /**
@@ -196,10 +200,6 @@ public final class TextBuffer implements TextSequence {
         if (!open) {
             this.data = EMPTY_BUFFER;
         }
-    }
-
-    public TextSequence concat(Text text) {
-        return append(text);
     }
 
     @Override
@@ -330,8 +330,39 @@ public final class TextBuffer implements TextSequence {
         return this;
     }
 
+    public TextBuffer replace(final byte a, final byte b) {
+        int scan = off + len;
+        if (!open) {
+            while (--scan >= off) {
+                if (data[scan] == a) {
+                    final byte[] temp = new byte[len];
+                    System.arraycopy(data, off, temp, 0, len);
+                    scan -= off;
+                    data = temp;
+                    open = true;
+                    off = 0;
+                    data[scan] = b;
+                    break;
+                }
+            }
+        }
+        while (--scan >= off) {
+            if (data[scan] == a) {
+                data[scan] = b;
+            }
+        }
+        return this;
+    }
+
     public int size() {
         return len;
+    }
+
+    public boolean startsWith(Text text) {
+        if (len < text.size()) {
+            return false;
+        }
+        return text.regionMatches(0, data, off, text.size());
     }
 
     @Override
@@ -350,6 +381,17 @@ public final class TextBuffer implements TextSequence {
         } else {
             return Text.valueOf(data, off, len);
         }
+    }
+
+    public TextBuffer trim() {
+        while (len > 0 && Text.WHITE_SPACE.indexOf(data[off]) != -1) {
+            off += 1;
+            len -= 1;
+        }
+        while (len > 0 && Text.WHITE_SPACE.indexOf(data[off + len - 1]) != -1) {
+            len -= 1;
+        }
+        return this;
     }
 
     public int writeTo(byte[] out, int off, int len) {

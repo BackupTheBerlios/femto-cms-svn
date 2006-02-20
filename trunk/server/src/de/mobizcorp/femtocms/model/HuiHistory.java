@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.lang.reflect.InvocationTargetException;
 
 import de.mobizcorp.hui.HuiText;
@@ -69,16 +70,17 @@ public class HuiHistory extends HuiText {
 
     private InputStream listHistory() throws IOException {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        OutputStreamWriter writer = new OutputStreamWriter(buffer, "UTF-8");
         final Store store = new Store(Store.findBase(new File(base, file
                 .toString())));
         Changes changes = store.changes();
         int start = changes.generation(changes.tip());
         scan: for (int i = start; i >= 0; i--) {
             LogEntry entry = changes.read(changes.version(i));
-            final Text[] files = entry.files;
+            final String[] files = entry.files;
             for (int j = 0; j < files.length; j++) {
                 if (files[j].equals(file)) {
-                    entry.writeTo(buffer);
+                    entry.writeTo(writer);
                     buffer.write('\n');
                     continue scan;
                 }

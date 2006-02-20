@@ -18,14 +18,11 @@
  */
 package de.mobizcorp.水星;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.Writer;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-
-import de.mobizcorp.lib.Text;
-import de.mobizcorp.lib.TextParser;
+import java.util.StringTokenizer;
 
 /**
  * Change log abstraction.
@@ -35,75 +32,78 @@ import de.mobizcorp.lib.TextParser;
 public class Changes extends History {
 
     public static class LogEntry {
-        private static long parseTime(Text text) {
+        private static long parseTime(String text) {
             // we ignore the timezone field for now
             int mark = text.indexOf(' ');
             final double nixTime;
             if (mark != -1) {
-                nixTime = Double.parseDouble(text.part(0, mark).toString());
+                nixTime = Double.parseDouble(text.substring(0, mark));
             } else {
-                nixTime = Double.parseDouble(text.toString());
+                nixTime = Double.parseDouble(text);
             }
             return (long) (nixTime * 1000);
         }
 
         public final Version changeset;
 
-        public final Text[] files;
+        public final String[] files;
+
+        public final int generation;
 
         public final Version manifest;
 
-        public final Text message;
+        public final String message;
 
         public final long time;
 
-        public final Text user;
-
-        public final int generation;
+        public final String user;
 
         public LogEntry(Version changeset, int generation, final byte[] data) {
             this.changeset = changeset;
             this.generation = generation;
-            final Text text = Text.constant(data);
-            final int mark = text.indexOf(_N_N) + 2;
-            final TextParser tp = new TextParser(text.part(0, mark), Store.NL);
-            this.manifest = Version.create(tp.next());
-            this.user = tp.next();
-            this.time = parseTime(tp.next());
-            final ArrayList<Text> buffer = new ArrayList<Text>();
-            while (tp.hasNext()) {
-                buffer.add(tp.next());
+            final int mark = Store.indexOf(data, _N_N) + 2;
+            final StringTokenizer tok = new StringTokenizer(Store.toString(data, 0, mark), "\n");
+            this.manifest = Version.create(tok.nextToken());
+            this.user = tok.nextToken();
+            this.time = parseTime(tok.nextToken());
+            final ArrayList<String> buffer = new ArrayList<String>();
+            while (tok.hasMoreTokens()) {
+                buffer.add(tok.nextToken());
             }
-            this.files = buffer.toArray(new Text[buffer.size()]);
-            this.message = text.part(mark, text.size() - mark);
+            this.files = buffer.toArray(new String[buffer.size()]);
+            this.message = Store.toString(data, mark, data.length - mark);
         }
-        
-        public void writeTo(OutputStream out) throws IOException {
-            Text.valueOf("changeset:   ").writeTo(out);
-            Text.valueOf(generation, 10).writeTo(out);
-            out.write(':');
-            changeset.toText().writeTo(out);
-            Text.valueOf("\nuser:        ").writeTo(out);
-            user.writeTo(out);
-            Text.valueOf("\ndate:        ").writeTo(out);
-            Text.valueOf(new Timestamp(time).toString()).writeTo(out);
-            Text.valueOf("\nfiles:       ").writeTo(out);
+
+        public void writeTo(Writer writer) throws IOException {
+            writer.write("changeset:   ");
+            writer.write(Integer.toString(generation, 10));
+            writer.write(':');
+            writer.write(changeset.toString());
+            writer.write("\nuser:        ");
+            writer.write(user);
+            writer.write("\ndate:        ");
+            writer.write(new Timestamp(time).toString());
+            writer.write("\nfiles:       ");
             for (int i = 0; i < files.length; i++) {
                 if (i > 0) {
-                    out.write(' ');
+                    writer.write(' ');
                 }
-                files[i].writeTo(out);
+                writer.write(files[i]);
             }
-            Text.valueOf("\ndescription:\n").writeTo(out);
-            message.writeTo(out);
-            out.write('\n');
+            writer.write("\ndescription:\n");
+            writer.write(message);
+            writer.write('\n');
         }
     }
+    
+    private static final byte[] _N_N = { '\n', '\n'};
 
-    private static final Text _N_N = Text.constant((byte) '\n', (byte) '\n');
+    private static final String CHANGE_CHUNKS = "00changelog.d";
 
-    public Changes(File base) throws IOException {
-        super(new File(base, "00changelog.i"), new File(base, "00changelog.d"));
+    private static final String CHANGE_INDEX = "00changelog.i";
+
+    public Changes(final StreamFactory base) throws IOException {
+        super(base, CHANGE_INDEX, CHANGE_CHUNKS);
     }
 
     public LogEntry read(Version version) throws IOException {

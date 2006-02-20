@@ -45,14 +45,10 @@ public class TextOutputStream extends OutputStream implements TextSequence {
         this.buffer = buffer;
     }
 
-    public TextSequence concat(Text text) {
-        return buffer.concat(text);
-    }
-
     public byte getByte(int index) {
         return buffer.getByte(index);
     }
-    
+
     public int getUnicode(int index) {
         return buffer.getUnicode(index);
     }

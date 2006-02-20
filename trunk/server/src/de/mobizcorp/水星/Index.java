@@ -19,9 +19,12 @@
 package de.mobizcorp.水星;
 
 import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
@@ -33,7 +36,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import de.mobizcorp.lib.Text;
 
 /**
  * Index file implementation.
@@ -54,7 +56,7 @@ public class Index {
      * 
      * @equiv revlog.indexfile
      */
-    private final MappedByteBuffer buffer;
+    private MappedByteBuffer buffer;
 
     /**
      * Reverse index, from version identifier to entry.
@@ -68,7 +70,7 @@ public class Index {
      * 
      * @equiv revlog.index
      */
-    private final Entry index[];
+    private Entry index[];
 
     public static class Entry {
         public static final int SIZE = 4 * 4 + 3 * Version.ID_SIZE;
@@ -130,8 +132,30 @@ public class Index {
      * @throws IOException
      *             propagated from I/O.
      */
-    public Index(final File file, final String mode) throws IOException {
+    public Index(final StreamFactory base, final String file, final String mode)
+            throws IOException {
         this.mode = mode;
+        if (base instanceof StreamFactory.Local) {
+            init(((StreamFactory.Local) base).file(file));
+        } else {
+            init(base.openInput(file));
+        }
+    }
+
+    private void init(final InputStream in) throws IOException {
+        final DataInput di = new DataInputStream(in);
+        final ArrayList<Entry> temp = new ArrayList<Entry>();
+        try {
+            for (int g = 0;;) {
+                temp.add(new Entry(di, g++));
+            }
+        } catch (EOFException e) {
+            // end reached
+        }
+        this.index = temp.toArray(new Entry[temp.size()]);
+    }
+
+    private void init(final File file) throws IOException {
         final RandomAccessFile accessFile = openIndex(file, mode);
         final long length = accessFile == null ? 0 : accessFile.length();
         if (length > Integer.MAX_VALUE) {
@@ -457,9 +481,9 @@ public class Index {
         return result;
     }
 
-    public Version lookup(Text spec) {
+    public Version lookup(String spec) {
         try {
-            int g = spec.toInt(10);
+            int g = Integer.parseInt(spec);
             if (g < 0) {
                 g = size() + g;
             }

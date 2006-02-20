@@ -18,15 +18,11 @@
  */
 package de.mobizcorp.水星;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
-import de.mobizcorp.lib.Text;
-import de.mobizcorp.lib.TextBuffer;
-import de.mobizcorp.lib.TextParser;
+import java.util.StringTokenizer;
 
 /**
  * File element implementation.
@@ -35,74 +31,92 @@ import de.mobizcorp.lib.TextParser;
  */
 public class Element extends History {
 
-    private static final Text _HG = Text.valueOf(".hg/"), _HG_HG = Text
-            .valueOf(".hg.hg/"), _I = Text.valueOf(".i/"), _I_HG = Text
-            .valueOf(".i.hg/"), _D = Text.valueOf(".d/"), _D_HG = Text
-            .valueOf(".d.hg/"), M_COPY = Text.valueOf("copy"), M_COPYREV = Text
-            .valueOf("copyrev"), M_COLON = Text
-            .constant((byte) ':', (byte) ' '), _MM = Text.constant((byte) 1,
-            (byte) '\n');
+    private static final String _HG_ = ".hg" + StreamFactory.Local.SEPARATOR;
 
-    private static Text encode(Text path) {
-        path = replace(path, _HG, _HG_HG);
-        path = replace(path, _I, _I_HG);
-        path = replace(path, _D, _D_HG);
+    private static final String _HG_HG_ = ".hg.hg"
+            + StreamFactory.Local.SEPARATOR;
+
+    private static final String _I_ = ".i" + StreamFactory.Local.SEPARATOR;
+
+    private static final String _I_HG_ = ".i.hg"
+            + StreamFactory.Local.SEPARATOR;
+
+    private static final String _D_ = ".d" + StreamFactory.Local.SEPARATOR;
+
+    private static final String _D_HG_ = ".d.hg"
+            + StreamFactory.Local.SEPARATOR;
+
+    private static final String M_COPY = "copy";
+
+    private static final String M_COPYREV = "copyrev";
+
+    private static final String M_COLON = ": ";
+
+    private static final byte[] _MM = { 1, '\n' };
+
+    private static String encode(String path) {
+        path = replace(path, _HG_, _HG_HG_);
+        path = replace(path, _I_, _I_HG_);
+        path = replace(path, _D_, _D_HG_);
         return path;
     }
 
-    private static Text replace(Text t, Text a, Text b) {
+    private static String replace(String t, String a, String b) {
         int start = 0, mark;
-        TextBuffer buffer = null;
+        StringBuffer buffer = null;
         while ((mark = t.indexOf(a, start)) != -1) {
             if (buffer == null) {
-                buffer = new TextBuffer(t.size() + b.size());
+                buffer = new StringBuffer(t.length() + b.length());
             }
-            buffer.append(t.part(start, mark - start)).append(b);
-            start = mark + a.size();
+            buffer.append(t.substring(start, mark)).append(b);
+            start = mark + a.length();
         }
-        return buffer == null ? t : buffer.toText();
+        return buffer == null ? t : buffer.toString();
     }
 
-    private Element(File data, String baseName) throws IOException {
-        super(new File(data, baseName + ".i"), new File(data, baseName + ".d"));
+    private Element(StreamFactory data, String prefix, String baseName)
+            throws IOException {
+        super(data, data.join(prefix, baseName + ".i"), data.join(prefix,
+                baseName + ".d"));
     }
 
-    public Element(File base, Text path) throws IOException {
-        this(new File(base, "data"), encode(path).toString());
+    public Element(StreamFactory base, String path) throws IOException {
+        this(base, "data", encode(path));
     }
 
-    public Map<Text, Text> meta(Version version) throws IOException {
-        Text text = Text.constant(contents(version));
-        if (!text.startsWith(_MM)) {
+    public Map<String, String> meta(Version version) throws IOException {
+        final byte[] contents = contents(version);
+        if (!Store.startsWith(contents, _MM)) {
             return Collections.emptyMap();
         }
-        HashMap<Text, Text> result = new HashMap<Text, Text>();
-        TextParser tp = new TextParser(text.part(2, text.indexOf(_MM, 2) - 2),
-                Store.NL);
-        while (tp.hasNext()) {
-            final Text line = tp.next();
+        HashMap<String, String> result = new HashMap<String, String>();
+        StringTokenizer tok = new StringTokenizer(Store.toString(contents, 2,
+                Store.indexOf(contents, _MM, 2) - 2), "\n");
+        while (tok.hasMoreTokens()) {
+            final String line = tok.nextToken();
             final int mark = line.indexOf(M_COLON);
-            result.put(line.part(0, mark), line.part(mark + M_COLON.size(),
-                    line.size() - mark - M_COLON.size()));
+            result.put(line.substring(0, mark), line.substring(mark
+                    + M_COLON.length()));
         }
         return result;
     }
 
     public byte[] read(Version version) throws IOException {
-        byte[] result = contents(version);
-        if (result.length < 2 || result[0] != 1 || result[1] != '\n') {
+        final byte[] result = contents(version);
+        if (!Store.startsWith(result, _MM)) {
             return result;
         }
         // strip meta-data
-        Text text = Text.constant(result);
-        int mark = text.indexOf(_MM, 2);
-        return text.part(mark + 2, text.size() - mark - 2).toBytes();
+        int mark = Store.indexOf(result, _MM, 2) + 2;
+        final byte[] stripped = new byte[result.length - mark];
+        System.arraycopy(result, mark, stripped, 0, stripped.length);
+        return stripped;
     }
 
-    public Text[] renamed(Version version) throws IOException {
-        Map<Text, Text> meta = meta(version);
+    public String[] renamed(Version version) throws IOException {
+        Map<String, String> meta = meta(version);
         if (meta.containsKey(M_COPY)) {
-            return new Text[] { meta.get(M_COPY), meta.get(M_COPYREV) };
+            return new String[] { meta.get(M_COPY), meta.get(M_COPYREV) };
         } else {
             return null;
         }
