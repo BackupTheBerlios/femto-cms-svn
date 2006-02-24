@@ -49,47 +49,8 @@ public final class Version {
 		}
 	}
 
-	public static byte[] bin(final String hex) {
-		final int end = hex.length() / 2;
-		final byte[] result = new byte[end];
-		for (int i = 0, j = 0; i < end; i++) {
-			int b = nibble(hex.charAt(j++));
-			b = (b << 4) | nibble(hex.charAt(j++));
-			result[i] = (byte) b;
-		}
-		return result;
-	}
-
 	public static boolean check(byte[] data, Version id, Version p0, Version p1) {
-		return compare(id(id), hash(data, id(p0), id(p1))) == 0;
-	}
-
-	private static int compare(byte a, byte b) {
-		return compare(a & 0xff, b & 0xff);
-	}
-
-	private static int compare(final byte[] p1, final byte[] p2) {
-		if (p1 != p2) {
-			if (p2 == null) {
-				return 1;
-			} else if (p1 == null) {
-				return -1;
-			}
-			final int dl = compare(p1.length, p2.length);
-			final int end = dl < 0 ? p2.length : p1.length;
-			for (int i = 0; i < end; i++) {
-				final int db = compare(p1[i], p2[i]);
-				if (db != 0) {
-					return db;
-				}
-			}
-			return dl;
-		}
-		return 0;
-	}
-
-	private static int compare(final int a, final int b) {
-		return a == b ? 0 : (a < b ? -1 : 1);
+		return Util.compare(id(id), hash(data, id(p0), id(p1))) == 0;
 	}
 
 	public static Version create(byte[] data, Version p1, Version p2) {
@@ -116,12 +77,8 @@ public final class Version {
 	}
 
 	public static Version create(final String hex) {
-		byte[] id = bin(hex);
+		byte[] id = Util.bin(hex);
 		return NULL.isId(id) ? NULL : new Version(id);
-	}
-
-	private static char digit(final int n) {
-		return (char) ((n < 10 ? '0' : 'a' - 10) + n);
 	}
 
 	public static synchronized byte[] hash(byte[] in, final byte[] p1,
@@ -148,42 +105,13 @@ public final class Version {
 		return hashDigest.digest();
 	}
 
-	public static String hex(final byte[] data) {
-		final int end = data.length;
-		StringBuffer buffer = new StringBuffer(end * 2);
-		for (int i = 0; i < end; i++) {
-			int b = data[i];
-			buffer.append(digit((b >>> 4) & 15)).append(digit(b & 15));
-		}
-		return buffer.toString();
-	}
-
 	public static byte[] id(Version version) {
 		return version == null ? null : version.id;
 	}
 
-	private static int nibble(final char c) {
-		if (c >= 'a') {
-			if (c <= 'f') {
-				return c - 'a' + 10;
-			}
-		}
-		if (c >= 'A') {
-			if (c <= 'F') {
-				return c - 'A' + 10;
-			}
-		}
-		if (c >= '0') {
-			if (c <= '9') {
-				return c - '0';
-			}
-		}
-		throw new IllegalArgumentException("invalid digit: '" + c + "'");
-	}
-
 	private static void update(final MessageDigest digest, final byte[] p1,
 			final byte[] p2) {
-		if (compare(p1, p2) == 1) {
+		if (Util.compare(p1, p2) == 1) {
             if (p2 != null)
                 digest.update(p2);
             if (p1 != null)
@@ -208,7 +136,7 @@ public final class Version {
 			return true;
 		} else if (o instanceof Version) {
 			Version other = (Version) o;
-			return compare(this.id, other.id) == 0;
+			return Util.compare(this.id, other.id) == 0;
 		} else {
 			return false;
 		}
@@ -220,11 +148,11 @@ public final class Version {
 	}
 
 	public boolean isId(byte[] id) {
-		return compare(this.id, id) == 0;
+		return Util.compare(this.id, id) == 0;
 	}
 
 	public String toString() {
-		return hex(id);
+		return Util.hex(id);
 	}
 
 }

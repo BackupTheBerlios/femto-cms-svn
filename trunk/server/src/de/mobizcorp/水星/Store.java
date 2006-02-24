@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.text.CollationKey;
 import java.text.Collator;
 import java.util.ArrayList;
@@ -93,12 +92,10 @@ public class Store {
 
     private static final String TIP = "tip";
 
-    private static final byte[] EMPTY = new byte[0];
-
     private static void addTag(HashMap<String, Version> tags, String text) {
         int mark = text.lastIndexOf(' ');
         if (mark != -1) {
-            String n = trim(text, 0, mark);
+            String n = Util.trim(text, 0, mark);
             String k = text.substring(mark + 1);
             tags.put(k, Version.create(n));
         }
@@ -236,58 +233,6 @@ public class Store {
         return findBase(new File(cwd));
     }
 
-    private static void forceRename(File from, File to) {
-        if (!from.renameTo(to)) {
-            to.delete();
-            from.renameTo(to);
-        }
-    }
-
-    public static boolean startsWith(final byte[] data, final byte[] match) {
-        int scan = match.length;
-        if (scan > data.length) {
-            return false;
-        }
-        while (--scan >= 0) {
-            if (data[scan] != match[scan]) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public static byte[] toBytes(String str) {
-        try {
-            return (str == null || str.length() == 0) ? EMPTY : str
-                    .getBytes("UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException(e.toString());
-        }
-    }
-
-    public static String toString(byte[] data) {
-        return toString(data, 0, data.length);
-    }
-
-    public static String toString(byte[] data, int off, int len) {
-        try {
-            return new String(data, off, len, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException(e.toString());
-        }
-    }
-
-    private static String trim(String text, int off, int len) {
-        while (len > 0 && text.charAt(off + len - 1) <= ' ') {
-            len -= 1;
-        }
-        while (len > 0 && text.charAt(off) <= ' ') {
-            len -= 1;
-            off += 1;
-        }
-        return text.substring(off, off + len);
-    }
-
     private final StreamFactory base;
 
     private final State state;
@@ -304,8 +249,9 @@ public class Store {
     public Store(String cwd) throws IOException {
         this(findBase(cwd));
     }
-    
-    public void add(final String... names) throws LockFailed, InterruptedException {
+
+    public void add(final String... names) throws LockFailed,
+            InterruptedException {
         Lock lock = writeLock();
         try {
             for (String name : names) {
@@ -314,14 +260,14 @@ public class Store {
                     if (file.exists()) {
                         System.err.println("not a plain file: " + file);
                     } else {
-                        System.err.println("doex not exist: " + file);
+                        System.err.println("does not exist: " + file);
                     }
                 } else {
                     byte s = state.getState(name);
                     if (s == 'a' || s == 'n') {
                         System.err.println("already tracked: " + file);
                     } else {
-                        state.update((byte)'a', name);
+                        state.update((byte) 'a', name);
                     }
                 }
             }
@@ -441,9 +387,13 @@ public class Store {
         Runnable after = new Runnable() {
 
             public void run() {
-                forceRename(journal, localBase.file("undo"));
-                forceRename(localBase.file("journal.dirstate"), localBase
-                        .file("undo.dirstate"));
+                try {
+                    Util.forceRename(journal, localBase.file("undo"));
+                    Util.forceRename(localBase.file("journal.dirstate"),
+                            localBase.file("undo.dirstate"));
+                } catch (IOException e) {
+                    throw new Util.RuntimeIOException(e);
+                }
             }
 
         };
@@ -469,33 +419,5 @@ public class Store {
         lock.lock(0);
         state.read();
         return lock;
-    }
-
-    public static int indexOf(final byte[] data, final byte[] match) {
-        return indexOf(data, match, 0);
-    }
-
-    public static int indexOf(final byte[] data, final byte[] match,
-            final int start) {
-        final int end = data.length - match.length;
-        seek: for (int i = start; i <= end; i++) {
-            int j = match.length;
-            while (--j >= 0) {
-                if (data[i + j] != match[j]) {
-                    continue seek;
-                }
-            }
-            return i;
-        }
-        return -1;
-    }
-
-    public static int indexOf(final byte[] data, final int b, final int start) {
-        for (int i = start; i < data.length; i++) {
-            if (data[i] == b) {
-                return i;
-            }
-        }
-        return -1;
     }
 }

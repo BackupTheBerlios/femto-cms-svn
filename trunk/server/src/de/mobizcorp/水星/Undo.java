@@ -64,9 +64,9 @@ public class Undo {
 		String path = file.getAbsolutePath();
 		if (!map.containsKey(path)) {
 			map.put(path, new Entry(file, offset));
-            undoLog.write(Store.toBytes(path));
+            undoLog.write(Util.toBytes(path));
             undoLog.write(0);
-            undoLog.write(Store.toBytes(Integer.toString(offset)));
+            undoLog.write(Util.toBytes(Integer.toString(offset)));
             undoLog.write('\n');
 			undoLog.flush();
 		}
@@ -76,7 +76,11 @@ public class Undo {
 		undoLog.close();
 		journal.delete();
 		if (after != null) {
-			after.run();
+            try {
+                after.run();
+            } catch (Util.RuntimeIOException e) {
+                throw e.getIOException();
+            }
 		}
 	}
 

@@ -25,7 +25,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 
@@ -56,12 +55,12 @@ public class State {
             int len = input.readInt();
             final byte[] data = new byte[len];
             input.readFully(data);
-            final int mark = Store.indexOf(data, 0, 0);
+            final int mark = Util.indexOf(data, 0, 0);
             if (mark != -1) {
-                name = Store.toString(data, 0, mark);
-                copy = Store.toString(data, mark + 1, data.length - mark - 1);
+                name = Util.toString(data, 0, mark);
+                copy = Util.toString(data, mark + 1, data.length - mark - 1);
             } else {
-                name = Store.toString(data);
+                name = Util.toString(data);
                 copy = null;
             }
         }
@@ -90,7 +89,7 @@ public class State {
 
         public Entry(final byte state, final String name, final File file) {
             this.state = state;
-            this.mode = State.fakeMode(file);
+            this.mode = Util.fakeMode(file);
             this.size = (int) file.length();
             this.time = (int) (file.lastModified() / 1000);
             this.name = name;
@@ -115,8 +114,8 @@ public class State {
             output.writeInt(mode);
             output.writeInt(size);
             output.writeInt(time);
-            final byte[] nameBytes = Store.toBytes(name);
-            final byte[] copyBytes = copy == null ? null : Store.toBytes(copy);
+            final byte[] nameBytes = Util.toBytes(name);
+            final byte[] copyBytes = copy == null ? null : Util.toBytes(copy);
             final int len = nameBytes.length
                     + (copy == null ? 0 : copyBytes.length + 1);
             output.writeInt(len);
@@ -155,51 +154,6 @@ public class State {
     private static final String RELRE_ = "relre:";
 
     private static final String SYNTAX_ = "syntax:";
-
-    static boolean readLine(final InputStream in, final StringBuffer buf)
-            throws IOException {
-        buf.setLength(0);
-        int end = 0;
-        boolean quote = false;
-        while (in.available() > 0) {
-            final int b = in.read();
-            if (b == -1) {
-                // oops eof
-                break;
-            } else if (quote) {
-                quote = false;
-                end = buf.length() + 1;
-            } else if (b == '\\') {
-                quote = true;
-                continue;
-            } else if (b == '\n') {
-                if (end > 0) {
-                    break;
-                } else {
-                    // skip empty lines.
-                    continue;
-                }
-            } else if (b == '#') {
-                int skip;
-                while ((skip = in.read()) != -1 && skip != '\n') {
-                    // skip rest of this line
-                }
-                if (end > 0) {
-                    break;
-                } else {
-                    // skip empty lines.
-                    continue;
-                }
-            } else if (b != ' ' && b != '\f' && b != '\t' && b != '\r') {
-                end = buf.length() + 1;
-            }
-            buf.append((byte) b);
-        }
-        if (end < buf.length()) {
-            buf.setLength(end);
-        }
-        return buf.length() > 0;
-    }
 
     private final StreamFactory base;
 
@@ -488,11 +442,5 @@ public class State {
         } finally {
             out.close();
         }
-    }
-
-    private static int fakeMode(final File file) {
-        int mask = (file.canRead() ? 4 : 0) | (file.canWrite() ? 2 : 0)
-                | (file.isDirectory() ? 1 : 0);
-        return mask | (mask << 3) | (mask << 6);
     }
 }

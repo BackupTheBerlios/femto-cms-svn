@@ -63,7 +63,7 @@ public class Manifest extends History {
         if (!version.equals(currentVersion)) {
             currentVersion = version;
             currentManifest = new HashMap<String, Entry>();
-            final StringTokenizer tok = new StringTokenizer(Store
+            final StringTokenizer tok = new StringTokenizer(Util
                     .toString(contents(version)), "\n");
             while (tok.hasMoreTokens()) {
                 String line = tok.nextToken();

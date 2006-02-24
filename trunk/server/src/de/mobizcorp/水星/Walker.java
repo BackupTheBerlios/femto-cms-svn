@@ -41,7 +41,7 @@ public interface Walker {
         public static FileOrder INSTANCE = new FileOrder();
 
         public static int fileCompare(File a, File b) {
-            return NameOrder.compare(a.getPath(), b.getPath(),
+            return Util.compare(a.getPath(), b.getPath(),
                     File.separatorChar);
         }
 
@@ -260,35 +260,12 @@ public interface Walker {
 
         public static final NameOrder INSTANCE = new NameOrder();
 
-        public static int compare(final String a, final String b,
-                final char separator) {
-            if (a == b) {
-                return 0;
-            } else if (a == null) {
-                return -1;
-            } else if (b == null) {
-                return 1;
-            }
-            final int la = a.length();
-            final int lb = b.length();
-            final int end = la > lb ? lb : la;
-            for (int i = 0; i < end; i++) {
-                final char ca = a.charAt(i);
-                final char cb = b.charAt(i);
-                if (ca != cb) {
-                    return (ca == separator ? 0 : ca)
-                            - (cb == separator ? 0 : cb);
-                }
-            }
-            return la - lb;
-        }
-
         public int compare(final String a, final String b) {
             return nameCompare(a, b);
         }
 
         public static int nameCompare(final String a, final String b) {
-            return compare(a, b, '/');
+            return Util.compare(a, b, '/');
         }
 
     }

@@ -61,8 +61,8 @@ public class Changes extends History {
         public LogEntry(Version changeset, int generation, final byte[] data) {
             this.changeset = changeset;
             this.generation = generation;
-            final int mark = Store.indexOf(data, _N_N) + 2;
-            final StringTokenizer tok = new StringTokenizer(Store.toString(data, 0, mark), "\n");
+            final int mark = Util.indexOf(data, _N_N) + 2;
+            final StringTokenizer tok = new StringTokenizer(Util.toString(data, 0, mark), "\n");
             this.manifest = Version.create(tok.nextToken());
             this.user = tok.nextToken();
             this.time = parseTime(tok.nextToken());
@@ -71,7 +71,7 @@ public class Changes extends History {
                 buffer.add(tok.nextToken());
             }
             this.files = buffer.toArray(new String[buffer.size()]);
-            this.message = Store.toString(data, mark, data.length - mark);
+            this.message = Util.toString(data, mark, data.length - mark);
         }
 
         public void writeTo(Writer writer) throws IOException {

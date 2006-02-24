@@ -55,23 +55,10 @@ public class Element extends History {
     private static final byte[] _MM = { 1, '\n' };
 
     private static String encode(String path) {
-        path = replace(path, _HG_, _HG_HG_);
-        path = replace(path, _I_, _I_HG_);
-        path = replace(path, _D_, _D_HG_);
+        path = Util.replace(path, _HG_, _HG_HG_);
+        path = Util.replace(path, _I_, _I_HG_);
+        path = Util.replace(path, _D_, _D_HG_);
         return path;
-    }
-
-    private static String replace(String t, String a, String b) {
-        int start = 0, mark;
-        StringBuffer buffer = null;
-        while ((mark = t.indexOf(a, start)) != -1) {
-            if (buffer == null) {
-                buffer = new StringBuffer(t.length() + b.length());
-            }
-            buffer.append(t.substring(start, mark)).append(b);
-            start = mark + a.length();
-        }
-        return buffer == null ? t : buffer.toString();
     }
 
     private Element(StreamFactory data, String prefix, String baseName)
@@ -86,12 +73,12 @@ public class Element extends History {
 
     public Map<String, String> meta(Version version) throws IOException {
         final byte[] contents = contents(version);
-        if (!Store.startsWith(contents, _MM)) {
+        if (!Util.startsWith(contents, _MM)) {
             return Collections.emptyMap();
         }
         HashMap<String, String> result = new HashMap<String, String>();
-        StringTokenizer tok = new StringTokenizer(Store.toString(contents, 2,
-                Store.indexOf(contents, _MM, 2) - 2), "\n");
+        StringTokenizer tok = new StringTokenizer(Util.toString(contents, 2,
+                Util.indexOf(contents, _MM, 2) - 2), "\n");
         while (tok.hasMoreTokens()) {
             final String line = tok.nextToken();
             final int mark = line.indexOf(M_COLON);
@@ -103,11 +90,11 @@ public class Element extends History {
 
     public byte[] read(Version version) throws IOException {
         final byte[] result = contents(version);
-        if (!Store.startsWith(result, _MM)) {
+        if (!Util.startsWith(result, _MM)) {
             return result;
         }
         // strip meta-data
-        int mark = Store.indexOf(result, _MM, 2) + 2;
+        int mark = Util.indexOf(result, _MM, 2) + 2;
         final byte[] stripped = new byte[result.length - mark];
         System.arraycopy(result, mark, stripped, 0, stripped.length);
         return stripped;
