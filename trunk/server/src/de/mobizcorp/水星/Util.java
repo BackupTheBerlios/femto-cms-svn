@@ -31,6 +31,9 @@ import java.io.UnsupportedEncodingException;
 public class Util {
 
     public static class RuntimeIOException extends RuntimeException {
+
+        private static final long serialVersionUID = -1111359573971000078L;
+
         private final IOException delegate;
 
         public RuntimeIOException(final IOException delegate) {
@@ -40,6 +43,7 @@ public class Util {
         public IOException getIOException() {
             return delegate;
         }
+
     }
 
     private static final byte[] EMPTY = new byte[0];

@@ -32,6 +32,8 @@ public class Lock {
 
     public static class LockFailed extends Exception {
 
+        private static final long serialVersionUID = -7996595421094933584L;
+
         public LockFailed(String message) {
             super(message);
         }
