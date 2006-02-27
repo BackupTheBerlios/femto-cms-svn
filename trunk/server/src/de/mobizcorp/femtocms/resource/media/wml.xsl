@@ -1,4 +1,4 @@
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   xmlns:femtocms="http://xml.apache.org/xalan/java/de.mobizcorp.femtocms.engine.BaseEngine"
   exclude-result-prefixes="femtocms">
   <!-- 
@@ -19,11 +19,11 @@
     License along with this library; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   -->
+  <xsl:import href="html.xsl"/>
   <xsl:param name="femtocms-engine"/>
   <xsl:param name="femtocms-base"/>
   <xsl:param name="femtocms-href"/>
   <xsl:param name="femtocms-sha1"/>
-  <xsl:import href="html.xsl"/>
   <xsl:output method="xml"
     media-type="text/vnd.wap.wml"
     doctype-public="-//WAPFORUM//DTD WML 1.1//EN"

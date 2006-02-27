@@ -25,6 +25,8 @@ import static de.mobizcorp.femtocms.resource.ResourceLoader.femtocmsLoader;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -44,11 +46,10 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.URIResolver;
 import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
+import javax.xml.transform.stream.StreamSource;
 
 import org.w3c.dom.Node;
 import org.xml.sax.XMLFilter;
-
-import com.sun.org.apache.xalan.internal.xsltc.trax.TrAXFilter; // FIXME
 
 /**
  * This engine serves resources from the class path. It lso defines the shared
@@ -120,13 +121,13 @@ public class NullEngine extends BaseEngine implements URIResolver {
         Templates templates = newTemplates(style);
         if (templates == null)
             return null;
-        TrAXFilter result = new TrAXFilter(templates);
+        TransformFilter result = new TransformFilter(tf
+                .newTransformerHandler(templates));
         configureTransformer(style, result.getTransformer());
         return result;
     }
 
-    public NullPipeline newPipeline(String method)
-            throws TransformerException {
+    public NullPipeline newPipeline(String method) throws TransformerException {
         String style = methods.get(method);
         if (style == null)
             return null;
@@ -189,7 +190,8 @@ public class NullEngine extends BaseEngine implements URIResolver {
         }
     }
 
-    public final Source resolve(String href, String base) throws TransformerException {
+    public final Source resolve(String href, String base)
+            throws TransformerException {
         try {
             URI hrefUri = new URI(trimPath(href));
             if (base != null && !hrefUri.isAbsolute()) {
@@ -309,5 +311,27 @@ public class NullEngine extends BaseEngine implements URIResolver {
 
     public URI getBaseUri() {
         return baseUri;
+    }
+
+    public static void copy(Source source, OutputStream out) throws IOException {
+        int n;
+        byte[] buffer = new byte[8192];
+        InputStream in = ((StreamSource) source).getInputStream();
+        while ((n = in.read(buffer)) > 0) {
+            out.write(buffer, 0, n);
+        }
+    }
+
+    public static String contentTypeFor(BasePipeline pipeline) {
+        String value = pipeline.getOutputProperty("media-type");
+        if (value != null) {
+            return value;
+        }
+        value = pipeline.getOutputProperty("method");
+        if (value == null || value.equals("text")) {
+            return "text/plain";
+        } else {
+            return "text/" + value;
+        }
     }
 }

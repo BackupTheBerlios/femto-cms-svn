@@ -92,6 +92,8 @@ public class ViewPipeline extends NullPipeline {
 			return true;
 		} catch (SAXException e) {
 			throw e; // avoid wrap
+        } catch (RuntimeException e) {
+            throw e;
 		} catch (Exception e) {
 			throw new SAXException(e);
 		}

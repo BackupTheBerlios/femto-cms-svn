@@ -27,6 +27,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLDecoder;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -37,7 +38,6 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 
 import de.mobizcorp.femtocms.prefs.ServerPreferences;
-import de.mobizcorp.lib.Text;
 import de.mobizcorp.lib.TwoQueueCache;
 import de.mobizcorp.水星.Changes;
 import de.mobizcorp.水星.Store;
@@ -88,7 +88,7 @@ public class ViewEngine extends NullEngine {
     @Override
     public long getLastModified(String href) {
         try {
-            Text path = Text.urlDecode(relativize(this.baseUri, new URI(href)));
+            String path = URLDecoder.decode(relativize(this.baseUri, new URI(href)), "UTF-8");
             if (isInManifest(path)) {
                 return tipLastModified;
             } else {
@@ -101,7 +101,7 @@ public class ViewEngine extends NullEngine {
 
     @Override
     protected StreamResource createStreamSource(String href) throws IOException {
-        final Text path = Text.urlDecode(href);
+        final String path = URLDecoder.decode(href, "UTF-8");
         final Entry entry = getManifest().get(path);
         if (entry == null) {
             return super.createStreamSource(href);
@@ -136,7 +136,7 @@ public class ViewEngine extends NullEngine {
         dirty = false;
     }
 
-    private boolean isInManifest(Text path) throws IOException {
+    private boolean isInManifest(String path) throws IOException {
         initManifest();
         return getManifest().get(path) != null;
     }

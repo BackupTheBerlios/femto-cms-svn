@@ -22,14 +22,10 @@ import static de.mobizcorp.femtocms.prefs.ServerPreferences.OUTPUT_CHARSET_FALLB
 import static de.mobizcorp.femtocms.prefs.ServerPreferences.OUTPUT_CHARSET_PREFERENCE;
 import static de.mobizcorp.femtocms.prefs.ServerPreferences.getString;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 
-import javax.xml.transform.Source;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
 
 import simple.http.Request;
 import simple.http.Response;
@@ -80,7 +76,7 @@ public class RepositoryMount extends RepositoryResource {
                 if (pipeline != null && text != null) {
                     pipeline.setParameter("femtocms-request-parameters",
                             request.getParameters());
-                    response.set("Content-Type", contentTypeFor(pipeline)
+                    response.set("Content-Type", NullEngine.contentTypeFor(pipeline)
                             + ";charset=" + charset);
                     response.setDate("Last-Modified", text.getLastModified());
                     OutputStream out = response.getPrintStream(8192);
@@ -111,7 +107,7 @@ public class RepositoryMount extends RepositoryResource {
                     }
                     response.setDate("Last-Modified", source.getLastModified());
                     OutputStream out = response.getOutputStream();
-                    copy(source, out);
+                    NullEngine.copy(source, out);
                     out.close();
                     response.commit();
                 } else {
@@ -122,29 +118,6 @@ public class RepositoryMount extends RepositoryResource {
                 handle(request, response, new ErrorReport(e, 404));
                 return;
             }
-        }
-    }
-
-    private static String contentTypeFor(BasePipeline pipeline) {
-        String value = pipeline.getOutputProperty("media-type");
-        if (value != null) {
-            return value;
-        }
-        value = pipeline.getOutputProperty("method");
-        if (value == null || value.equals("text")) {
-            return "text/plain";
-        } else {
-            return "text/" + value;
-        }
-    }
-
-    private static void copy(Source source, OutputStream out)
-            throws IOException {
-        int n;
-        byte[] buffer = new byte[8192];
-        InputStream in = ((StreamSource) source).getInputStream();
-        while ((n = in.read(buffer)) > 0) {
-            out.write(buffer, 0, n);
         }
     }
 
