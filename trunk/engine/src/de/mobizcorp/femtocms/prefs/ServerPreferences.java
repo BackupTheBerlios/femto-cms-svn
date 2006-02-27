@@ -25,7 +25,7 @@ import java.util.prefs.Preferences;
  */
 public class ServerPreferences {
 
-    public static final String FCM_VERSION = "0.5";
+    public static final String FCM_VERSION = "0.6";
 
     /**
      * The server identification string. Default: "femtocms/<var>version</var>".
