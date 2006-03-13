@@ -3,7 +3,7 @@
 <wb-module deploy-name="servlet-presentation">
 <module-type module-type-id="jst.web">
 <version>2.4</version>
-<property name="context-root"/>
+<property name="context-root" value="ROOT"/>
 <property name="java-output-path" value="/bin/"/>
 </module-type>
 <wb-resource deploy-path="/WEB-INF/classes" source-path="/JavaSource"/>
