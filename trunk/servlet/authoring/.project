@@ -3,6 +3,7 @@
 	<name>servlet-authoring</name>
 	<comment></comment>
 	<projects>
+		<project>femtocms-engine</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
