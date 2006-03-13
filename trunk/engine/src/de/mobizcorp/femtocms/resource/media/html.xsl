@@ -71,7 +71,7 @@
   </xsl:template>
   <xsl:template name="html-head"/>
   <xsl:template name="html-title">
-    <xsl:value-of select="*/@title"/>
+    <xsl:value-of select="@title"/>
   </xsl:template>
   <xsl:template name="html-body">
     <xsl:apply-templates select="*"/>
